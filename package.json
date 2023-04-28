@@ -1,0 +1,44 @@
+{
+  "name": "secheresse-api",
+  "version": "0.0.0",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "lint": "xo",
+    "build": "node lib/build/index.js"
+  },
+  "dependencies": {
+    "@turf/turf": "^6.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "flatbush": "^4.1.0",
+    "geobuf": "^3.0.2",
+    "got": "^12.6.0",
+    "http-errors": "^2.0.0",
+    "lmdb": "^2.7.11",
+    "morgan": "^1.10.0",
+    "pbf": "^3.2.1"
+  },
+  "devDependencies": {
+    "xo": "^0.54.2"
+  },
+  "xo": {
+    "semicolon": false,
+    "space": 2,
+    "rules": {
+      "comma-dangle": [
+        "error",
+        "never"
+      ],
+      "import/no-unassigned-import": "off",
+      "import/order": "off",
+      "unicorn/prevent-abbreviations": "off"
+    }
+  },
+  "engines": {
+    "node": ">= 18.12"
+  }
+}
