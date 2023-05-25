@@ -23,7 +23,12 @@ await downloadFile(
   'restrictions.csv'
 )
 
+await downloadFile(
+  'http://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2023/geojson/communes-50m.geojson',
+  'communes-50m.geojson'
+)
+
 async function downloadFile(url, name) {
-  const data = await got(url).buffer()
+  const data = await got(url, {decompress: true}).buffer()
   await writeFile(`./data/${name}`, data)
 }
