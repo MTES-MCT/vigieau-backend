@@ -1,7 +1,7 @@
 /* eslint comma-dangle: off */
 import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
-import {chain, keyBy, groupBy} from 'lodash-es'
+import {chain, keyBy, groupBy, pick} from 'lodash-es'
 
 const today = (new Date()).toISOString().slice(0, 10)
 
@@ -196,7 +196,8 @@ const zones = [...zonesAlerteInfos.keys()]
   .map(idZone => {
     const zone = zonesIndex[idZone]
     const {idArrete, niveauAlerte} = zonesAlerteInfos.get(idZone)
-    zone.idArrete = idArrete
+    const arrete = arretesIndex[idArrete]
+    zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite'])
     zone.niveauAlerte = niveauAlerte
     zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
     return zone
