@@ -1,9 +1,9 @@
 /* eslint comma-dangle: off */
 import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
-import {chain, keyBy, groupBy, pick} from 'lodash-es'
+import {chain, keyBy, groupBy, pick, omit} from 'lodash-es'
 
-import {destroyContext, computeCommunes} from './geo.js'
+import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
 
 const today = (new Date()).toISOString().slice(0, 10)
 
@@ -209,5 +209,14 @@ const zones = [...zonesAlerteInfos.keys()]
 
 await writeFile('./data/zones.json', JSON.stringify(zones))
 console.log(`Écriture de ${zones.length} zones`)
+
+await writeFile('./data/zones.geojson', JSON.stringify({
+  type: 'FeatureCollection',
+  features: zones.map(zone => ({
+    type: 'Feature',
+    properties: omit(zone, ['usages', 'communes']),
+    geometry: getZoneGeometry(zone.idZone, true)
+  }))
+}))
 
 destroyContext()

@@ -27,16 +27,13 @@ for (const communeFeature of communesLayer.features) {
 const MIN_AREA_SIZE_IN_SQ_DEGREES = 0.000_090_42 // 10ha
 
 export function computeCommunes(zone) {
-  const zoneFeature = zonesFeaturesIndex.get(zone.idZone)
-  const {departement} = zone
-
-  const zoneGeometry = zoneFeature.getGeometry()
+  const zoneGeometry = getZoneGeometry(zone.idZone)
 
   if (!zoneGeometry) {
-    console.log('No geometry for id ' + zone.idZone)
     return
   }
 
+  const {departement} = zone
   const communesFeatures = communesFeaturesByDep.get(departement)
 
   return communesFeatures
@@ -55,6 +52,24 @@ export function computeCommunes(zone) {
       }
     })
     .map(feature => feature.fields.get('code'))
+}
+
+export function getZoneGeometry(idZone, convertToGeoJSON = false) {
+  const zoneFeature = zonesFeaturesIndex.get(idZone)
+
+  if (!zoneFeature) {
+    console.log(`Contour de la zone ${idZone} non trouvé`)
+    return
+  }
+
+  const zoneGeometry = zoneFeature.getGeometry()
+
+  if (!zoneGeometry) {
+    console.log('No geometry for id ' + idZone)
+    return
+  }
+
+  return convertToGeoJSON ? zoneGeometry.toObject() : zoneGeometry
 }
 
 export function destroyContext() {
