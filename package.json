@@ -8,6 +8,7 @@
     "start": "node server.js",
     "lint": "xo",
     "build": "node lib/build/index.js",
+    "download-datasets": "node scripts/download-datasets.js",
     "prepare-data": "node scripts/prepare-data/index.js"
   },
   "dependencies": {

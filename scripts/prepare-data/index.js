@@ -214,7 +214,7 @@ await writeFile('./data/zones.geojson', JSON.stringify({
   type: 'FeatureCollection',
   features: zones.map(zone => ({
     type: 'Feature',
-    properties: omit(zone, ['usages', 'communes']),
+    properties: omit(zone, ['usages', 'communes', 'arrete']),
     geometry: getZoneGeometry(zone.idZone, true)
   }))
 }))
