@@ -3,6 +3,8 @@ import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
 import {chain, keyBy, groupBy, pick} from 'lodash-es'
 
+import {destroyContext, computeCommunes} from './geo.js'
+
 const today = (new Date()).toISOString().slice(0, 10)
 
 const departementsPilotes = new Set(['06', '13', '30', '70'])
@@ -200,9 +202,12 @@ const zones = [...zonesAlerteInfos.keys()]
     zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite'])
     zone.niveauAlerte = niveauAlerte
     zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
+    zone.communes = computeCommunes(zone)
     return zone
   })
   .filter(z => z.usages.length > 0)
 
 await writeFile('./data/zones.json', JSON.stringify(zones))
 console.log(`Écriture de ${zones.length} zones`)
+
+destroyContext()
