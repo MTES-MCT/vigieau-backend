@@ -8,7 +8,8 @@
     "start": "node server.js",
     "lint": "xo",
     "download-datasets": "node scripts/download-datasets.js",
-    "prepare-data": "node scripts/prepare-data/index.js"
+    "prepare-data": "node scripts/prepare-data/index.js",
+    "scalingo-postbuild": "yarn download-datasets && yarn prepare-data"
   },
   "dependencies": {
     "@turf/bbox": "^6.5.0",
