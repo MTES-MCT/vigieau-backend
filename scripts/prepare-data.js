@@ -202,9 +202,7 @@ const zones = [...zonesAlerteInfos.keys()]
     zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
     return zone
   })
-
-await writeFile('./data/arretes.json', JSON.stringify(arretes))
-console.log(`Écriture de ${arretes.length} arrêtés`)
+  .filter(z => z.usages.length > 0)
 
 await writeFile('./data/zones.json', JSON.stringify(zones))
 console.log(`Écriture de ${zones.length} zones`)
