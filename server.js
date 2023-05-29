@@ -6,8 +6,9 @@ import express from 'express'
 import morgan from 'morgan'
 import cors from 'cors'
 import createError from 'http-errors'
+import {omit} from 'lodash-es'
 
-import {search} from './lib/search.js'
+import {searchZone} from './lib/search.js'
 
 const app = express()
 
@@ -17,7 +18,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'))
 }
 
-app.get('/search', w((req, res) => {
+app.get('/zone', w((req, res) => {
   const lon = Number.parseFloat(req.query.lon)
   const lat = Number.parseFloat(req.query.lat)
 
@@ -25,14 +26,16 @@ app.get('/search', w((req, res) => {
     throw createError(400, 'lon/lat are not valid')
   }
 
-  const results = search({lon, lat})
-  res.send(results)
+  const zone = searchZone({lon, lat})
+  res.send(omit(zone, 'communes'))
 }))
 
 app.use((err, req, res, _next) => {
   res.status(err.statusCode || 500).send({
     code: err.statusCode || 500,
-    message: err.message
+    message: err.message,
+    arretes: err.arretes,
+    niveauAlerte: err.niveauAlerte
   })
 })
 
