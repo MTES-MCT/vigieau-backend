@@ -210,13 +210,15 @@ const zones = [...zonesAlerteInfos.keys()]
 await writeFile('./data/zones.json', JSON.stringify(zones))
 console.log(`Écriture de ${zones.length} zones`)
 
-await writeFile('./data/zones.geojson', JSON.stringify({
+const featureCollection = {
   type: 'FeatureCollection',
   features: zones.map(zone => ({
     type: 'Feature',
     properties: omit(zone, ['usages', 'communes', 'arrete']),
     geometry: getZoneGeometry(zone.idZone, true)
   }))
-}))
+}
+
+await writeFile('./data/zones.geojson', JSON.stringify(featureCollection))
 
 destroyContext()
