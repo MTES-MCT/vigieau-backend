@@ -72,7 +72,7 @@ async function readArretes() {
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
     .groupBy('idArrete')
     .map(arreteZones => {
-      const {idArrete, dateDebutValidite, dateFinValidite, statut} = arreteZones[0]
+      const {idArrete, dateDebutValidite, dateFinValidite, cheminFichier, statut} = arreteZones[0]
 
       const zonesAlertes = arreteZones
         .map(({idZone, niveauAlerte}) => ({idZone, niveauAlerte}))
@@ -87,7 +87,8 @@ async function readArretes() {
         dateDebutValidite,
         dateFinValidite,
         statut,
-        zonesAlertes
+        zonesAlertes,
+        cheminFichier
       }
     })
     .filter(arrete => arrete.zonesAlertes.length > 0) // On élimine les arrêtés sans zones acceptées
