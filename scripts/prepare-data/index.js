@@ -207,7 +207,6 @@ const zones = [...zonesAlerteInfos.keys()]
     zone.communes = computeCommunes(zone)
     return zone
   })
-  .filter(z => z.usages.length > 0)
 
 await writeFile('./data/zones.json', JSON.stringify(zones))
 console.log(`Écriture de ${zones.length} zones`)
