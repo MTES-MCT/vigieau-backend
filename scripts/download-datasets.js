@@ -1,25 +1,30 @@
+import 'dotenv/config.js'
+
+import process from 'node:process'
 import {mkdir, writeFile} from 'node:fs/promises'
 import got from 'got'
+
+const PROPLUVIA_DATA_URL = process.env.PROPLUVIA_DATA_URL || 'https://propluvia-data.s3.gra.io.cloud.ovh.net'
 
 await mkdir('./data', {recursive: true})
 
 await downloadFile(
-  'https://propluvia-data.s3.gra.io.cloud.ovh.net/shp/all_zones.shp.zip',
+  `${PROPLUVIA_DATA_URL}/shp/all_zones.shp.zip`,
   'all_zones.shp.zip'
 )
 
 await downloadFile(
-  'https://propluvia-data.s3.gra.io.cloud.ovh.net/csv/zones_historiques.csv',
-  'zones_historiques.csv'
+  `${PROPLUVIA_DATA_URL}/csv/zones.csv`,
+  'zones.csv'
 )
 
 await downloadFile(
-  'https://propluvia-data.s3.gra.io.cloud.ovh.net/csv/arretes.csv',
+  `${PROPLUVIA_DATA_URL}/csv/arretes.csv`,
   'arretes.csv'
 )
 
 await downloadFile(
-  'https://propluvia-data.s3.gra.io.cloud.ovh.net/csv/restrictions.csv',
+  `${PROPLUVIA_DATA_URL}/csv/restrictions.csv`,
   'restrictions.csv'
 )
 

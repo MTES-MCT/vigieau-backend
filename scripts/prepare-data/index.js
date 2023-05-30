@@ -40,7 +40,7 @@ async function readCsv(filePath) {
 }
 
 async function readZones() {
-  const rows = await readCsv('./data/zones_historiques.csv')
+  const rows = await readCsv('./data/zones.csv')
 
   return rows
     .map(row => ({
@@ -66,7 +66,8 @@ async function readArretes() {
       dateDebutValidite: row.debut_validite_arrete?.slice(0, 10),
       dateFinValidite: row.fin_validite_arrete?.slice(0, 10),
       niveauAlerte: row.nom_niveau,
-      statut: row.statut_arrete
+      statut: row.statut_arrete,
+      cheminFichier: row.chemin_fichier ? `https://piece-jointe-carto.developpement-durable.gouv.fr/NAT007/Propluvia/pdf/${row.chemin_fichier}` : undefined
     }))
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
     .groupBy('idArrete')
@@ -199,7 +200,7 @@ const zones = [...zonesAlerteInfos.keys()]
     const zone = zonesIndex[idZone]
     const {idArrete, niveauAlerte} = zonesAlerteInfos.get(idZone)
     const arrete = arretesIndex[idArrete]
-    zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite'])
+    zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite', 'cheminFichier'])
     zone.niveauAlerte = niveauAlerte
     zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
     zone.communes = computeCommunes(zone)
