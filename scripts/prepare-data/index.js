@@ -17,7 +17,7 @@ const usagesParticuliers = new Set([
   // 'ICPE soumises à un APC relatif à la sécheresse',
   // 'Installations de production d\'électricité d\'origine nucléaire, hydraulique, et thermique à flamme',
   // 'Irrigation dans le cadre de la gestion collective (OUGC)',
-  // 'Navigation fluviale',
+  'Navigation fluviale',
   'Lavage de véhicules chez les particuliers',
   'Lavage de véhicules par des professionnels',
   'Nettoyage des façades, toitures, trottoirs et autres surfaces imperméabilisées',
