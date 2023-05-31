@@ -16,7 +16,7 @@ const departementsPilotes = new Set(['06', '13', '30', '70'])
 
 const usagesParticuliers = new Set([
   'Alimentation des fontaines publiques et privées d’ornement',
-  // 'Arrosage des espaces verts',
+  'Arrosage des espaces verts',
   // 'Arrosage des golfs(Conformément à l\'accord cadre golf et environnement 2019-2024',
   'Arrosage des pelouses, massifs fleuris',
   // 'ICPE soumises à un APC relatif à la sécheresse',
@@ -26,7 +26,7 @@ const usagesParticuliers = new Set([
   'Lavage de véhicules chez les particuliers',
   'Lavage de véhicules par des professionnels',
   'Nettoyage des façades, toitures, trottoirs et autres surfaces imperméabilisées',
-  // 'Prélèvement en canaux ',
+  'Prélèvement en canaux ',
   // 'Piscines ouvertes au public',
   'Remplissage et vidange de piscines privées (de plus d\'1 m3)',
   'Remplissage / vidange des plans d\'eau',
