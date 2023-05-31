@@ -1,9 +1,14 @@
 /* eslint comma-dangle: off */
+import 'dotenv/config.js'
+
+import process from 'node:process'
 import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
 import {chain, keyBy, groupBy, pick, omit} from 'lodash-es'
 
 import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
+
+const PROPLUVIA_DATA_URL = process.env.PROPLUVIA_DATA_URL || 'https://propluvia-data.s3.gra.io.cloud.ovh.net'
 
 const today = (new Date()).toISOString().slice(0, 10)
 
@@ -67,7 +72,7 @@ async function readArretes() {
       dateFinValidite: row.fin_validite_arrete?.slice(0, 10),
       niveauAlerte: row.nom_niveau,
       statut: row.statut_arrete,
-      cheminFichier: row.chemin_fichier ? `https://piece-jointe-carto.developpement-durable.gouv.fr/NAT007/Propluvia/pdf/${row.chemin_fichier}` : undefined
+      cheminFichier: row.chemin_fichier ? `${PROPLUVIA_DATA_URL}/pdf/${row.chemin_fichier}` : undefined
     }))
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
     .groupBy('idArrete')
