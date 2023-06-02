@@ -136,7 +136,6 @@ async function readRestrictions() {
       heureFin: parseHeure(row.heure_fin),
       operateurLogiqueOu: row.est_operateur_logique_ou === 'True'
     }))
-    .filter(r => r.concerneEauPotable)
     .filter(r => r.concerneParticulier)
     .filter(r => usagesParticuliers.has(r.usage))
     .filter(r => !['Pas de restriction', 'Sensibilisation'].includes(r.niveauRestriction))
