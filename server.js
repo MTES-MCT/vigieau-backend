@@ -8,7 +8,7 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
-import {searchZone} from './lib/search.js'
+import {searchZone, searchZones} from './lib/search.js'
 
 const app = express()
 
@@ -28,6 +28,18 @@ app.get('/zone', w((req, res) => {
 
   const zone = searchZone({lon, lat})
   res.send(omit(zone, 'communes'))
+}))
+
+app.get('/zones', w((req, res) => {
+  const lon = Number.parseFloat(req.query.lon)
+  const lat = Number.parseFloat(req.query.lat)
+
+  if (Number.isNaN(lon) || Number.isNaN(lat) || lon <= -180 || lon >= 180 || lat <= -85 || lat >= 85) {
+    throw createError(400, 'lon/lat are not valid')
+  }
+
+  const zones = searchZones({lon, lat})
+  res.send(zones.map(z => omit(z, 'communes')))
 }))
 
 app.use((err, req, res, _next) => {
