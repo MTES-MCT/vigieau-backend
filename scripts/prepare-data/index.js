@@ -203,7 +203,7 @@ function restrictionsToUsages(restrictions) {
 }
 
 function signUsages(usages) {
-  return hashObj(sortBy(usages, 'usage'), {algorithm: 'md5'})
+  return hashObj(sortBy(usages, 'usage'), {algorithm: 'md5'}).slice(0, 9)
 }
 
 const zones = [...zonesAlerteInfos.keys()]
