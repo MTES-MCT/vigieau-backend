@@ -4,7 +4,8 @@ import 'dotenv/config.js'
 import process from 'node:process'
 import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
-import {chain, keyBy, groupBy, pick, omit} from 'lodash-es'
+import {chain, keyBy, groupBy, pick, omit, sortBy} from 'lodash-es'
+import hashObj from 'hash-obj'
 
 import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
 
@@ -200,6 +201,10 @@ function restrictionsToUsages(restrictions) {
     .value()
 }
 
+function signUsages(usages) {
+  return hashObj(sortBy(usages, 'usage'), {algorithm: 'md5'})
+}
+
 const zones = [...zonesAlerteInfos.keys()]
   .map(idZone => {
     const zone = zonesIndex[idZone]
@@ -208,6 +213,7 @@ const zones = [...zonesAlerteInfos.keys()]
     zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite', 'cheminFichier'])
     zone.niveauAlerte = niveauAlerte
     zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
+    zone.usagesHash = zone.usages.length > 0 ? signUsages(zone.usages) : null
     zone.communes = computeCommunes(zone)
     return zone
   })
