@@ -10,10 +10,11 @@ import hashObj from 'hash-obj'
 import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
 
 const PROPLUVIA_DATA_URL = process.env.PROPLUVIA_DATA_URL || 'https://propluvia-data.s3.gra.io.cloud.ovh.net'
+const DEPARTEMENTS = process.env.DEPARTEMENTS ? process.env.DEPARTEMENTS.split(',') : []
 
 const today = (new Date()).toISOString().slice(0, 10)
 
-const departementsPilotes = new Set(['06', '13', '30', '70'])
+const departementsPilotes = new Set(DEPARTEMENTS)
 
 const usagesParticuliers = new Set([
   'Alimentation des fontaines publiques et privées d’ornement',
