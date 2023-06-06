@@ -8,7 +8,7 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
-import {searchZone, searchZones} from './lib/search.js'
+import {searchZone, searchZonesByLonLat, searchZonesByCommune} from './lib/search.js'
 
 const app = express()
 
@@ -31,15 +31,24 @@ app.get('/zone', w((req, res) => {
 }))
 
 app.get('/zones', w((req, res) => {
-  const lon = Number.parseFloat(req.query.lon)
-  const lat = Number.parseFloat(req.query.lat)
+  if (req.query.lon && req.query.lat) {
+    const lon = Number.parseFloat(req.query.lon)
+    const lat = Number.parseFloat(req.query.lat)
 
-  if (Number.isNaN(lon) || Number.isNaN(lat) || lon <= -180 || lon >= 180 || lat <= -85 || lat >= 85) {
-    throw createError(400, 'lon/lat are not valid')
+    if (Number.isNaN(lon) || Number.isNaN(lat) || lon <= -180 || lon >= 180 || lat <= -85 || lat >= 85) {
+      throw createError(400, 'lon/lat are not valid')
+    }
+
+    const zones = searchZonesByLonLat({lon, lat})
+    return res.send(zones.map(z => omit(z, 'communes')))
   }
 
-  const zones = searchZones({lon, lat})
-  res.send(zones.map(z => omit(z, 'communes')))
+  if (req.query.commune) {
+    const zones = searchZonesByCommune(req.query.commune)
+    return res.send(zones.map(z => omit(z, 'communes')))
+  }
+
+  throw createError(400, 'Les paramètres lon/lat ou commune sont requis')
 }))
 
 app.use((err, req, res, _next) => {
