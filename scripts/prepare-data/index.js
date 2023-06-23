@@ -234,3 +234,18 @@ const featureCollection = {
 await writeFile('./data/zones.geojson', JSON.stringify(featureCollection))
 
 destroyContext()
+
+async function readReglesGestion() {
+  const rows = await readCsv('./data/regles_gestion.csv')
+  return rows.map(row => ({
+    code: row.code_departement,
+    nom: row.nom_departement,
+    estValide: row.est_valide === 'True',
+    affichageRestrictionSiSuperpositionTypeZone: row.affichage_restriction_si_superposition_type_zone,
+    appliqueNiveauGraviteMaxSiPlusieursTypeZoneMemeCommune: row.applique_niveau_gravite_max_si_plusieurs_type_zone_meme_commune === 'True'
+  }))
+}
+
+const reglesGestion = await readReglesGestion()
+
+await writeFile('./data/regles-gestion.json', JSON.stringify(reglesGestion))

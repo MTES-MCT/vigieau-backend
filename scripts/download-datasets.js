@@ -29,6 +29,11 @@ await downloadFile(
 )
 
 await downloadFile(
+  `${PROPLUVIA_DATA_URL}/csv/regles_gestion.csv`,
+  'regles_gestion.csv'
+)
+
+await downloadFile(
   'http://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2023/geojson/communes-50m.geojson',
   'communes-50m.geojson'
 )
