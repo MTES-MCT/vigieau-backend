@@ -9,6 +9,7 @@ import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
 import {searchZone, searchZonesByLonLat, searchZonesByCommune} from './lib/search.js'
+import {getReglesGestion} from './lib/regles-gestion.js'
 
 const app = express()
 
@@ -49,6 +50,16 @@ app.get('/zones', w((req, res) => {
   }
 
   throw createError(400, 'Les paramètres lon/lat ou commune sont requis')
+}))
+
+app.get('/departements/:codeDepartement', w((req, res) => {
+  const reglesGestion = getReglesGestion(req.params.codeDepartement)
+
+  if (!reglesGestion) {
+    throw createError(404, 'Département non présent dans la base de données')
+  }
+
+  res.send(reglesGestion)
 }))
 
 app.use((err, req, res, _next) => {
