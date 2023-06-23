@@ -10,11 +10,8 @@ import hashObj from 'hash-obj'
 import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
 
 const PROPLUVIA_DATA_URL = process.env.PROPLUVIA_DATA_URL || 'https://propluvia-data.s3.gra.io.cloud.ovh.net'
-const DEPARTEMENTS = process.env.DEPARTEMENTS ? process.env.DEPARTEMENTS.split(',') : []
 
 const today = (new Date()).toISOString().slice(0, 10)
-
-const departementsPilotes = new Set(DEPARTEMENTS)
 
 const usagesParticuliers = new Set([
   'Alimentation des fontaines publiques et privées d’ornement',
@@ -46,6 +43,23 @@ async function readCsv(filePath) {
   return Papa.parse(data, {skipEmptyLines: true, header: true}).data
 }
 
+async function readReglesGestion() {
+  const rows = await readCsv('./data/regles_gestion.csv')
+  return rows.map(row => ({
+    code: row.code_departement,
+    nom: row.nom_departement,
+    estValide: row.est_valide === 'True',
+    affichageRestrictionSiSuperpositionTypeZone: row.affichage_restriction_si_superposition_type_zone,
+    appliqueNiveauGraviteMaxSiPlusieursTypeZoneMemeCommune: row.applique_niveau_gravite_max_si_plusieurs_type_zone_meme_commune === 'True'
+  }))
+}
+
+const reglesGestion = await readReglesGestion()
+
+await writeFile('./data/regles-gestion.json', JSON.stringify(reglesGestion))
+
+const departementsValides = new Set(reglesGestion.map(rg => rg.code))
+
 async function readZones() {
   const rows = await readCsv('./data/zones.csv')
 
@@ -56,7 +70,7 @@ async function readZones() {
       nom: row.nom_zone,
       departement: row.code_departement
     }))
-    .filter(z => departementsPilotes.has(z.departement))
+    .filter(z => departementsValides.has(z.departement))
 }
 
 const zonesIndex = keyBy(await readZones(), 'idZone')
@@ -234,18 +248,3 @@ const featureCollection = {
 await writeFile('./data/zones.geojson', JSON.stringify(featureCollection))
 
 destroyContext()
-
-async function readReglesGestion() {
-  const rows = await readCsv('./data/regles_gestion.csv')
-  return rows.map(row => ({
-    code: row.code_departement,
-    nom: row.nom_departement,
-    estValide: row.est_valide === 'True',
-    affichageRestrictionSiSuperpositionTypeZone: row.affichage_restriction_si_superposition_type_zone,
-    appliqueNiveauGraviteMaxSiPlusieursTypeZoneMemeCommune: row.applique_niveau_gravite_max_si_plusieurs_type_zone_meme_commune === 'True'
-  }))
-}
-
-const reglesGestion = await readReglesGestion()
-
-await writeFile('./data/regles-gestion.json', JSON.stringify(reglesGestion))
