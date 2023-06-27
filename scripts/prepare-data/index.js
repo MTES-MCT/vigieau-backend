@@ -43,6 +43,38 @@ async function readCsv(filePath) {
   return Papa.parse(data, {skipEmptyLines: true, header: true}).data
 }
 
+async function readUsagesGuideSecheresse() {
+  const rows = await readCsv('./data/restriction_guide_secheresse.csv')
+
+  const result = {
+    vigilance: [],
+    alerte: [],
+    alerteRenforcee: [],
+    crise: []
+  }
+
+  for (const row of rows) {
+    if (!row.concerne_particulier.includes('True')) {
+      continue
+    }
+
+    const usageBase = {
+      thematique: row.thematique ? row.thematique.trim() : 'Autre',
+      usage: row.usage.trim(),
+      niveauRestriction: 'Interdiction sauf exception',
+    }
+
+    result.vigilance.push({...usageBase, details: row.vigilance.trim().replace(/\r\n/g, '\n')})
+    result.alerte.push({...usageBase, details: row.alerte.trim().replace(/\r\n/g, '\n')})
+    result.alerteRenforcee.push({...usageBase, details: row.alerte_renforcee.trim().replace(/\r\n/g, '\n')})
+    result.crise.push({...usageBase, details: row.crise.trim().replace(/\r\n/g, '\n')})
+  }
+
+  return result
+}
+
+const usagesGuideSecheresse = await readUsagesGuideSecheresse()
+
 async function readReglesGestion() {
   const rows = await readCsv('./data/regles_gestion.csv')
   return rows.map(row => ({
@@ -55,10 +87,11 @@ async function readReglesGestion() {
 }
 
 const reglesGestion = await readReglesGestion()
+const reglesGestionIndex = keyBy(reglesGestion, 'code')
 
 await writeFile('./data/regles-gestion.json', JSON.stringify(reglesGestion))
 
-const departementsValides = new Set(reglesGestion.map(rg => rg.code))
+const departementsActifs = new Set(reglesGestion.map(rg => rg.code))
 
 async function readZones() {
   const rows = await readCsv('./data/zones.csv')
@@ -70,7 +103,7 @@ async function readZones() {
       nom: row.nom_zone,
       departement: row.code_departement
     }))
-    .filter(z => departementsValides.has(z.departement))
+    .filter(z => departementsActifs.has(z.departement))
 }
 
 const zonesIndex = keyBy(await readZones(), 'idZone')
@@ -221,6 +254,24 @@ function signUsages(usages) {
   return hashObj(sortBy(usages, 'usage'), {algorithm: 'md5'}).slice(0, 9)
 }
 
+function niveauRestrictionToKey(niveauRestriction) {
+  if (niveauRestriction === 'Vigilance') {
+    return 'vigilance'
+  }
+
+  if (niveauRestriction === 'Alerte') {
+    return 'alerte'
+  }
+
+  if (niveauRestriction === 'Alerte renforcée') {
+    return 'alerteRenforcee'
+  }
+
+  if (niveauRestriction === 'Crise') {
+    return 'crise'
+  }
+}
+
 const zones = [...zonesAlerteInfos.keys()]
   .map(idZone => {
     const zone = zonesIndex[idZone]
@@ -228,7 +279,14 @@ const zones = [...zonesAlerteInfos.keys()]
     const arrete = arretesIndex[idArrete]
     zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite', 'cheminFichier'])
     zone.niveauAlerte = niveauAlerte
-    zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
+
+    if (reglesGestionIndex[zone.departement].estValide) {
+      zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
+    } else {
+      zone.usages = usagesGuideSecheresse[niveauRestrictionToKey(niveauAlerte)]
+      zone.usagesGuideSecheresse = true
+    }
+
     zone.usagesHash = zone.usages.length > 0 ? signUsages(zone.usages) : null
     zone.communes = computeCommunes(zone)
     return zone
