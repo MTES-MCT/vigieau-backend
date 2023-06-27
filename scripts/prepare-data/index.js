@@ -88,7 +88,8 @@ async function readArretes() {
       dateFinValidite: row.fin_validite_arrete?.slice(0, 10),
       niveauAlerte: row.nom_niveau,
       statut: row.statut_arrete,
-      cheminFichier: row.chemin_fichier ? `${PROPLUVIA_DATA_URL}/pdf/${row.chemin_fichier}` : undefined
+      cheminFichier: row.chemin_fichier ? `${PROPLUVIA_DATA_URL}/pdf/${row.chemin_fichier}` : undefined,
+      cheminFichierArreteCadre: row.chemin_fichier_arrete_cadre ? `${PROPLUVIA_DATA_URL}/pdf/${row.chemin_fichier_arrete_cadre}` : undefined
     }))
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
     .groupBy('idArrete')
