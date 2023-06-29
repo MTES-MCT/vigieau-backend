@@ -127,7 +127,7 @@ async function readArretes() {
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
     .groupBy('idArrete')
     .map(arreteZones => {
-      const {idArrete, dateDebutValidite, dateFinValidite, cheminFichier, statut} = arreteZones[0]
+      const {idArrete, dateDebutValidite, dateFinValidite, cheminFichier, cheminFichierArreteCadre, statut} = arreteZones[0]
 
       const zonesAlertes = arreteZones
         .map(({idZone, niveauAlerte}) => ({idZone, niveauAlerte}))
@@ -143,7 +143,8 @@ async function readArretes() {
         dateFinValidite,
         statut,
         zonesAlertes,
-        cheminFichier
+        cheminFichier,
+        cheminFichierArreteCadre
       }
     })
     .filter(arrete => arrete.zonesAlertes.length > 0) // On élimine les arrêtés sans zones acceptées
@@ -277,7 +278,7 @@ const zones = [...zonesAlerteInfos.keys()]
     const zone = zonesIndex[idZone]
     const {idArrete, niveauAlerte} = zonesAlerteInfos.get(idZone)
     const arrete = arretesIndex[idArrete]
-    zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite', 'cheminFichier'])
+    zone.arrete = pick(arrete, ['idArrete', 'dateDebutValidite', 'dateFinValidite', 'cheminFichier', 'cheminFichierArreteCadre'])
     zone.niveauAlerte = niveauAlerte
 
     if (reglesGestionIndex[zone.departement].estValide) {
