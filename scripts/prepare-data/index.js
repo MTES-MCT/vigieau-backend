@@ -125,7 +125,7 @@ async function readArretes() {
       cheminFichierArreteCadre: row.chemin_fichier_arrete_cadre ? `${PROPLUVIA_DATA_URL}/pdf/${row.chemin_fichier_arrete_cadre}` : undefined
     }))
     .filter(arrete => arrete.dateDebutValidite <= today && arrete.dateFinValidite >= today)
-    .filter(arrete => arrete.statut_arrete === 'Publié')
+    .filter(arrete => arrete.statut === 'Publié')
     .groupBy('idArrete')
     .map(arreteZones => {
       const {idArrete, dateDebutValidite, dateFinValidite, cheminFichier, cheminFichierArreteCadre, statut} = arreteZones[0]
