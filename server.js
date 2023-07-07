@@ -8,8 +8,9 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
-import {searchZonesByLonLat, searchZonesByCommune} from './lib/search.js'
+import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
+import {getCommune} from './lib/cog.js'
 
 const app = express()
 
@@ -53,6 +54,27 @@ app.get('/departements/:codeDepartement', w((req, res) => {
   }
 
   res.send(reglesGestion)
+}))
+
+app.get('/reglementation', w((req, res) => {
+  let lon
+  let lat
+
+  if (!req.query.commune || !getCommune(req.query.commune)) {
+    throw createError(400, 'La paramètre commune est requis')
+  }
+
+  if (req.query.lon && req.query.lat) {
+    lon = Number.parseFloat(req.query.lon)
+    lat = Number.parseFloat(req.query.lat)
+
+    if (Number.isNaN(lon) || Number.isNaN(lat) || lon <= -180 || lon >= 180 || lat <= -85 || lat >= 85) {
+      throw createError(400, 'lon/lat are not valid')
+    }
+  }
+
+  const zone = computeZoneApplicable({lon, lat, codeCommune: req.query.commune})
+  res.send(omit(zone, ['communes']))
 }))
 
 app.use((err, req, res, _next) => {
