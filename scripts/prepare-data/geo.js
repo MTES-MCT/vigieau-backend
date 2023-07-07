@@ -24,7 +24,18 @@ for (const communeFeature of communesLayer.features) {
   communesFeaturesByDep.get(departement).push(communeFeature)
 }
 
-const MIN_AREA_SIZE_IN_SQ_DEGREES = 0.000_090_42 // 10ha
+const communesAreaCache = new Map()
+
+function getCommuneArea(feature) {
+  const code = feature.fields.get('code')
+
+  if (!communesAreaCache.has(code)) {
+    const area = feature.getGeometry().getArea()
+    communesAreaCache.set(code, area)
+  }
+
+  return communesAreaCache.get(code)
+}
 
 export function computeCommunes(zone) {
   const zoneGeometry = getZoneGeometry(zone.idZone)
@@ -46,7 +57,7 @@ export function computeCommunes(zone) {
         }
 
         const area = intersectionGeom.getArea()
-        return area > MIN_AREA_SIZE_IN_SQ_DEGREES
+        return area > getCommuneArea(feature) * 0.1 // On garde si plus de 10% de la surface de la commune est couverte
       } catch {
         return feature.getGeometry().intersects(zoneGeometry)
       }
