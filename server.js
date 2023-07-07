@@ -34,6 +34,11 @@ app.get('/zones', w((req, res) => {
 
   if (req.query.commune) {
     const zones = searchZonesByCommune(req.query.commune)
+
+    if (zones.length === 0) {
+      throw createError(404, 'Aucune zone d’alerte en vigueur sur cette commune.')
+    }
+
     return res.send(zones.map(z => omit(z, 'communes')))
   }
 
