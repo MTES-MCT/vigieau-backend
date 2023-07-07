@@ -12,6 +12,7 @@
     "scalingo-postbuild": "yarn download-datasets && yarn prepare-data"
   },
   "dependencies": {
+    "@etalab/decoupage-administratif": "^3.0.0",
     "@turf/bbox": "^6.5.0",
     "@turf/boolean-point-in-polygon": "^6.5.0",
     "cors": "^2.8.5",
