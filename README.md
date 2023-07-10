@@ -4,8 +4,6 @@ API permettent de retourner les restrictions en vigueur en lien avec la politiqu
 
 Elle se base sur les données Propluvia Privé.
 
-*Les règles de gestion sont en cours de documentation.*
-
 ## Pré-requis
 
 - Node.js 18.12 ou supérieur
@@ -23,10 +21,9 @@ yarn download-datasets
 # Préparation des données
 yarn prepare-data
 
+# Génération des cartes de suivi
+yarn compute-maps
+
 # Démarrage du serveur de l'API
 yarn start
 ```
-
-## API
-
-*À documenter*
