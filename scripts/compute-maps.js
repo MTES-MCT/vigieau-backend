@@ -41,7 +41,7 @@ const style = {
           'match',
           ['get', 'niveauAlerte'],
           0,
-          '#D7D7D7',
+          '#d7d7d7',
           1,
           '#009081',
           2,
@@ -50,7 +50,7 @@ const style = {
           '#ce614a',
           4,
           '#e1000f',
-          '#000'
+          '#d7d7d7'
         ]
       }
     }
