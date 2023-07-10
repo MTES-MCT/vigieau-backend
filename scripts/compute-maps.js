@@ -60,27 +60,33 @@ const style = {
 const ZONES = {
   metropole: {
     center: [2.35, 46.5],
-    zoom: 5.5
+    zoom: 6.5,
+    size: 2000
   },
   guadeloupe: {
     center: [-61.4, 16.17],
-    zoom: 9.7
+    zoom: 9.1,
+    size: 800
   },
   martinique: {
     center: [-61.02, 14.64],
-    zoom: 10.3
+    zoom: 9.7,
+    size: 800
   },
   guyane: {
     center: [-53.2, 3.95],
-    zoom: 7.5
+    zoom: 6.9,
+    size: 800
   },
   reunion: {
     center: [55.53, -21.13],
-    zoom: 10
+    zoom: 9.4,
+    size: 800
   },
   mayotte: {
     center: [45.15, -12.82],
-    zoom: 10.8
+    zoom: 10.2,
+    size: 800
   }
 }
 
@@ -104,13 +110,13 @@ async function renderMaps(geojson) {
   map.load(style)
 
   for (const [zoneName, zone] of Object.entries(ZONES)) {
-    const renderOptions = {...zone, height: 1024, width: 1024}
+    const renderOptions = {...zone, height: zone.size, width: zone.size}
     const mapViewBuffer = await renderMapView(map, renderOptions)
 
     await sharp(mapViewBuffer, {
       raw: {
-        width: 1024,
-        height: 1024,
+        width: zone.size,
+        height: zone.size,
         channels: 4
       }
     }).png({quality: 100}).toFile(path.join(path.resolve('./data'), `carte-${zoneName}.png`))
