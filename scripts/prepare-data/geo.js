@@ -13,8 +13,10 @@ for (const zoneFeature of zonesLayer.features) {
 }
 
 const communesFeaturesByDep = new Map()
+const communesFeaturesByCode = new Map()
 
 for (const communeFeature of communesLayer.features) {
+  const code = communeFeature.fields.get('code')
   const departement = communeFeature.fields.get('departement')
 
   if (!communesFeaturesByDep.has(departement)) {
@@ -22,6 +24,7 @@ for (const communeFeature of communesLayer.features) {
   }
 
   communesFeaturesByDep.get(departement).push(communeFeature)
+  communesFeaturesByCode.set(code, communeFeature)
 }
 
 const communesAreaCache = new Map()
@@ -63,6 +66,19 @@ export function computeCommunes(zone) {
       }
     })
     .map(feature => feature.fields.get('code'))
+}
+
+export function getCommuneGeometry(code, convertToGeoJSON = false) {
+  const communeFeature = communesFeaturesByCode.get(code)
+
+  if (!communeFeature) {
+    console.log(`Contour de la commune ${code} non trouvé`)
+    return
+  }
+
+  const communeGeometry = communeFeature.getGeometry()
+
+  return convertToGeoJSON ? communeGeometry.toObject() : communeGeometry
 }
 
 export function getZoneGeometry(idZone, convertToGeoJSON = false) {
