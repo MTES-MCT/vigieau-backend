@@ -1,10 +1,27 @@
 import path from 'node:path'
-import {keyBy, maxBy} from 'lodash-es'
+import {readFile} from 'node:fs/promises'
+import {maxBy} from 'lodash-es'
 import mbgl from '@maplibre/maplibre-gl-native'
 import sharp from 'sharp'
-import {getCommuneGeometry} from './geo.js'
-import {getCommunes} from '../../lib/cog.js'
-import {getTypePrio, computeZoneScore, getNiveau} from '../../lib/util.js'
+import {getCommunes} from '../lib/cog.js'
+import {getReglesGestion} from '../lib/regles-gestion.js'
+import {getTypePrio, computeZoneScore, getNiveau} from '../lib/util.js'
+
+async function readCommunesGeometries() {
+  const communesGeometries = new Map()
+  const data = await readFile('./data/communes-1000m.geojson', {encoding: 'utf8'})
+
+  for (const communeFeature of JSON.parse(data).features) {
+    communesGeometries.set(communeFeature.properties.code, communeFeature.geometry)
+  }
+
+  return communesGeometries
+}
+
+async function readZones() {
+  const data = await readFile('./data/zones.json', {encoding: 'utf8'})
+  return JSON.parse(data)
+}
 
 const style = {
   layers: [
@@ -41,7 +58,7 @@ const style = {
 const ZONES = {
   metropole: {
     center: [2.35, 46.5],
-    zoom: 4.5
+    zoom: 5.5
   },
   guadeloupe: {
     center: [-61.4, 16.17],
@@ -68,20 +85,19 @@ const ZONES = {
 const options = {
   request(req, callback) {
     callback()
-  },
-  ratio: 2
+  }
 }
 
 function writeFileLog(filename, err) {
   if (err) {
     console.error(err)
-    console.log(`Error pendant le traitement del’image ${filename}`)
+    console.log(`Error pendant le traitement de l’image ${filename}`)
   } else {
     console.log(`Image ${filename} enregistrée avec succès`)
   }
 }
 
-async function generateMaps(geojson, outputPath) {
+async function renderMaps(geojson) {
   style.sources = {
     communes: {
       type: 'geojson',
@@ -90,10 +106,11 @@ async function generateMaps(geojson, outputPath) {
   }
 
   console.log('Génération des cartes en cours…')
+
   await Promise.all(Object.keys(ZONES).map(async zone => {
     const map = new mbgl.Map(options)
 
-    const renderOptions = ZONES[zone]
+    const renderOptions = {...ZONES[zone], height: 1024, width: 1024}
     map.load(style)
 
     await map.render(renderOptions, async (err, buffer) => {
@@ -109,18 +126,20 @@ async function generateMaps(geojson, outputPath) {
           height: 1024,
           channels: 4
         }
-      }).resize(2000, 2000)
+      })
 
-      const webp = image.toFormat('webp', {quality: 100})
-      const webpName = `carte-${zone}.webp`
-      webp.toFile(path.join(outputPath, webpName), err => writeFileLog(webpName, err))
+      const webp = image.toFormat('png', {quality: 100})
+      const webpName = `carte-${zone}.png`
+      webp.toFile(path.join(path.resolve('./data'), webpName), err => writeFileLog(webpName, err))
     })
   }))
 }
 
-export async function computeMaps(zones, reglesGestion, outputPath) {
+const communesGeometries = await readCommunesGeometries()
+
+export async function computeMaps() {
+  const zones = await readZones()
   const zonesCommunesIndex = {}
-  const reglesGestionByDepartement = keyBy(reglesGestion, 'code')
 
   for (const zone of zones) {
     for (const commune of zone.communes) {
@@ -136,13 +155,13 @@ export async function computeMaps(zones, reglesGestion, outputPath) {
 
   for (const commune of getCommunes()) {
     const codeDepartement = commune.departement
-    const rg = reglesGestionByDepartement[codeDepartement]
+    const rg = getReglesGestion(codeDepartement)
 
     if (!rg) {
       continue
     }
 
-    const geometry = getCommuneGeometry(commune.code, true)
+    const geometry = communesGeometries.get(commune.code)
 
     const zonesCommune = zonesCommunesIndex[commune.code]
 
@@ -169,5 +188,7 @@ export async function computeMaps(zones, reglesGestion, outputPath) {
     features
   }
 
-  await generateMaps(geojson, outputPath)
+  await renderMaps(geojson)
 }
+
+await computeMaps()

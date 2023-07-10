@@ -43,6 +43,11 @@ await downloadFile(
   'communes-50m.geojson'
 )
 
+await downloadFile(
+  'http://etalab-datasets.geo.data.gouv.fr/contours-administratifs/2023/geojson/communes-1000m.geojson',
+  'communes-1000m.geojson'
+)
+
 async function downloadFile(url, name) {
   const data = await got(url, {decompress: true}).buffer()
   await writeFile(`./data/${name}`, data)
