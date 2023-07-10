@@ -2,7 +2,7 @@
 /* eslint no-await-in-loop: off */
 import path from 'node:path'
 import {readFile, mkdir} from 'node:fs/promises'
-import fetch from 'node-fetch'
+import got from 'got'
 import {maxBy} from 'lodash-es'
 import mbgl from '@maplibre/maplibre-gl-native'
 import sharp from 'sharp'
@@ -107,9 +107,7 @@ const ZONES = {
 const options = {
   async request(req, callback) {
     try {
-      const response = await fetch(req.url)
-      const data = await response.buffer()
-
+      const data = await got(req.url).buffer()
       callback(null, {data})
     } catch (error) {
       callback(error)
