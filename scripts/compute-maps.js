@@ -2,6 +2,7 @@
 /* eslint no-await-in-loop: off */
 import path from 'node:path'
 import {readFile, mkdir} from 'node:fs/promises'
+import fetch from 'node-fetch'
 import {maxBy} from 'lodash-es'
 import mbgl from '@maplibre/maplibre-gl-native'
 import sharp from 'sharp'
@@ -53,6 +54,19 @@ const style = {
           '#d7d7d7'
         ]
       }
+    },
+    {
+      id: 'departements-line',
+      type: 'line',
+      source: 'departements',
+      layout: {
+        'line-join': 'round',
+        visibility: 'visible'
+      },
+      paint: {
+        'line-color': '#fff',
+        'line-width': 2
+      }
     }
   ]
 }
@@ -91,19 +105,30 @@ const ZONES = {
 }
 
 const options = {
-  request(req, callback) {
-    callback()
+  async request(req, callback) {
+    try {
+      const response = await fetch(req.url)
+      const data = await response.buffer()
+
+      callback(null, {data})
+    } catch (error) {
+      callback(error)
+    }
   }
 }
 
 async function renderMaps(geojson) {
   const mapsPath = path.resolve('./data/maps')
-  await mkdir(mapsPath)
+  await mkdir(mapsPath, {recursive: true})
 
   style.sources = {
     communes: {
       type: 'geojson',
       data: geojson
+    },
+    departements: {
+      type: 'geojson',
+      data: 'https://adresse.data.gouv.fr/data/contours-administratifs/latest/geojson/departements-1000m.geojson'
     }
   }
 
