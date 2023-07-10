@@ -10,7 +10,7 @@
     "download-datasets": "node scripts/download-datasets.js",
     "prepare-data": "node scripts/prepare-data/index.js",
     "compute-maps": "node scripts/compute-maps.js",
-    "scalingo-postbuild": "yarn download-datasets && yarn prepare-data"
+    "scalingo-postbuild": "wget https://vigieau-data.s3.gra.io.cloud.ovh.net/prebuilt-data-latest.zip && unzip prebuilt-data-latest.zip"
   },
   "dependencies": {
     "@etalab/decoupage-administratif": "^3.0.0",
