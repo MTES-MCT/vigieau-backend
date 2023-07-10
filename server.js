@@ -20,6 +20,8 @@ if (process.env.NODE_ENV !== 'production') {
   app.use(morgan('dev'))
 }
 
+app.use('/maps', express.static('./data/maps'))
+
 app.get('/zones', w((req, res) => {
   if (req.query.lon && req.query.lat) {
     const lon = Number.parseFloat(req.query.lon)
