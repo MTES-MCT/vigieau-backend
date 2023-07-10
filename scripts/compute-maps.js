@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+/* eslint no-await-in-loop: off */
 import path from 'node:path'
 import {readFile} from 'node:fs/promises'
 import {maxBy} from 'lodash-es'
@@ -62,38 +64,29 @@ const ZONES = {
   },
   guadeloupe: {
     center: [-61.4, 16.17],
-    zoom: 8.7
+    zoom: 9.7
   },
   martinique: {
     center: [-61.02, 14.64],
-    zoom: 9.3
+    zoom: 10.3
   },
   guyane: {
     center: [-53.2, 3.95],
-    zoom: 6.5
+    zoom: 7.5
   },
   reunion: {
     center: [55.53, -21.13],
-    zoom: 9
+    zoom: 10
   },
   mayotte: {
     center: [45.15, -12.82],
-    zoom: 9.8
+    zoom: 10.8
   }
 }
 
 const options = {
   request(req, callback) {
     callback()
-  }
-}
-
-function writeFileLog(filename, err) {
-  if (err) {
-    console.error(err)
-    console.log(`Error pendant le traitement de l’image ${filename}`)
-  } else {
-    console.log(`Image ${filename} enregistrée avec succès`)
   }
 }
 
@@ -107,32 +100,35 @@ async function renderMaps(geojson) {
 
   console.log('Génération des cartes en cours…')
 
-  await Promise.all(Object.keys(ZONES).map(async zone => {
-    const map = new mbgl.Map(options)
+  const map = new mbgl.Map(options)
+  map.load(style)
 
-    const renderOptions = {...ZONES[zone], height: 1024, width: 1024}
-    map.load(style)
+  for (const [zoneName, zone] of Object.entries(ZONES)) {
+    const renderOptions = {...zone, height: 1024, width: 1024}
+    const mapViewBuffer = await renderMapView(map, renderOptions)
 
-    await map.render(renderOptions, async (err, buffer) => {
+    await sharp(mapViewBuffer, {
+      raw: {
+        width: 1024,
+        height: 1024,
+        channels: 4
+      }
+    }).png({quality: 100}).toFile(path.join(path.resolve('./data'), `carte-${zoneName}.png`))
+  }
+
+  map.release()
+}
+
+function renderMapView(map, renderOptions) {
+  return new Promise((resolve, reject) => {
+    map.render(renderOptions, (err, buffer) => {
       if (err) {
-        throw err
+        return reject(err)
       }
 
-      map.release()
-
-      const image = sharp(buffer, {
-        raw: {
-          width: 1024,
-          height: 1024,
-          channels: 4
-        }
-      })
-
-      const webp = image.toFormat('png', {quality: 100})
-      const webpName = `carte-${zone}.png`
-      webp.toFile(path.join(path.resolve('./data'), webpName), err => writeFileLog(webpName, err))
+      resolve(buffer)
     })
-  }))
+  })
 }
 
 const communesGeometries = await readCommunesGeometries()
