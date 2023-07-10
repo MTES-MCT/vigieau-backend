@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint no-await-in-loop: off */
 import path from 'node:path'
-import {readFile} from 'node:fs/promises'
+import {readFile, mkdir} from 'node:fs/promises'
 import {maxBy} from 'lodash-es'
 import mbgl from '@maplibre/maplibre-gl-native'
 import sharp from 'sharp'
@@ -97,6 +97,9 @@ const options = {
 }
 
 async function renderMaps(geojson) {
+  const mapsPath = path.resolve('./data/maps')
+  await mkdir(mapsPath)
+
   style.sources = {
     communes: {
       type: 'geojson',
@@ -119,7 +122,7 @@ async function renderMaps(geojson) {
         height: zone.size,
         channels: 4
       }
-    }).png({quality: 100}).toFile(path.join(path.resolve('./data'), `carte-${zoneName}.png`))
+    }).png({quality: 100}).toFile(path.join(mapsPath, `${zoneName}.png`))
   }
 
   map.release()
