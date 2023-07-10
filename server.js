@@ -10,7 +10,7 @@ import {omit} from 'lodash-es'
 
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
-import {getCommune} from './lib/cog.js'
+import {getCommune, normalizeCodeCommune} from './lib/cog.js'
 
 const app = express()
 
@@ -64,6 +64,12 @@ app.get('/reglementation', w((req, res) => {
     throw createError(400, 'La paramètre commune est requis')
   }
 
+  if (req.query.commune === '13055') {
+    throw createError(409, 'Veuillez renseigner une adresse pour préciser la réglementation applicable')
+  }
+
+  const codeCommune = normalizeCodeCommune(req.query.commune)
+
   if (req.query.lon && req.query.lat) {
     lon = Number.parseFloat(req.query.lon)
     lat = Number.parseFloat(req.query.lat)
@@ -73,7 +79,7 @@ app.get('/reglementation', w((req, res) => {
     }
   }
 
-  const zone = computeZoneApplicable({lon, lat, codeCommune: req.query.commune})
+  const zone = computeZoneApplicable({lon, lat, codeCommune})
   res.send(omit(zone, ['communes']))
 }))
 
