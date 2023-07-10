@@ -1,6 +1,7 @@
 /* eslint comma-dangle: off */
 import 'dotenv/config.js'
 
+import path from 'node:path'
 import process from 'node:process'
 import {readFile, writeFile} from 'node:fs/promises'
 import Papa from 'papaparse'
@@ -8,6 +9,7 @@ import {chain, keyBy, groupBy, pick, omit, sortBy} from 'lodash-es'
 import hashObj from 'hash-obj'
 
 import {destroyContext, computeCommunes, getZoneGeometry} from './geo.js'
+import {computeMaps} from './map.js'
 
 const PROPLUVIA_DATA_URL = process.env.PROPLUVIA_DATA_URL || 'https://propluvia-data.s3.gra.io.cloud.ovh.net'
 
@@ -307,5 +309,7 @@ const featureCollection = {
 }
 
 await writeFile('./data/zones.geojson', JSON.stringify(featureCollection))
+
+await computeMaps(zones, reglesGestion, path.resolve('./data'))
 
 destroyContext()
