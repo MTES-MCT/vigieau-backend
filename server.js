@@ -60,7 +60,7 @@ app.get('/reglementation', w((req, res) => {
   let lon
   let lat
 
-  if (!req.query.commune || !getCommune(req.query.commune)) {
+  if (!req.query.commune) {
     throw createError(400, 'La paramètre commune est requis')
   }
 
@@ -69,6 +69,10 @@ app.get('/reglementation', w((req, res) => {
   }
 
   const codeCommune = normalizeCodeCommune(req.query.commune)
+
+  if (!getCommune(codeCommune)) {
+    throw createError(400, 'Commune invalide')
+  }
 
   if (req.query.lon && req.query.lat) {
     lon = Number.parseFloat(req.query.lon)
