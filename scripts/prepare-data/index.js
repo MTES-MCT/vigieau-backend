@@ -82,7 +82,8 @@ async function readReglesGestion() {
     nom: row.nom_departement,
     estValide: row.est_valide === 'True',
     affichageRestrictionSiSuperpositionTypeZone: row.affichage_restriction_si_superposition_type_zone,
-    appliqueNiveauGraviteMaxSiPlusieursTypeZoneMemeCommune: row.applique_niveau_gravite_max_si_plusieurs_type_zone_meme_commune === 'True'
+    appliqueNiveauGraviteMaxSiPlusieursTypeZoneMemeCommune: row.applique_niveau_gravite_max_si_plusieurs_type_zone_meme_commune === 'True',
+    arDifferentAc: row.arrete_cadre_different_restriction === 'True'
   }))
 }
 
