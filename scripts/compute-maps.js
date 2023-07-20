@@ -42,16 +42,16 @@ const style = {
           'match',
           ['get', 'niveauAlerte'],
           0,
-          '#d7d7d7',
+          '#e8edff',
           1,
-          '#009081',
+          '#bca12b',
           2,
-          '#c3992a',
+          '#feb24c',
           3,
-          '#ce614a',
+          '#fc4e2a',
           4,
-          '#e1000f',
-          '#d7d7d7'
+          '#b10026',
+          '#e8edff'
         ]
       }
     },
