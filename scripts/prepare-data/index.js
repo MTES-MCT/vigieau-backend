@@ -135,7 +135,16 @@ async function readArretes() {
         .filter(({idZone}) => zonesIndex[idZone]) // On vérifie que la zone est dans notre liste
 
       for (const zoneAlerte of zonesAlertes) {
-        zonesAlerteInfos.set(zoneAlerte.idZone, {idArrete, niveauAlerte: zoneAlerte.niveauAlerte})
+        if (zonesAlerteInfos.has(zoneAlerte.idZone)) {
+          const current = zonesAlerteInfos.get(zoneAlerte.idZone)
+
+          // Dans le cas où on a plusieurs arrêtés en vigueur pour une même zone, on en choisit qu'un et on privilégie celui de statut Publié
+          if (current.statut === statut || statut === 'Terminé') {
+            continue
+          }
+        }
+
+        zonesAlerteInfos.set(zoneAlerte.idZone, {idArrete, statut, niveauAlerte: zoneAlerte.niveauAlerte})
       }
 
       return {
@@ -192,6 +201,7 @@ async function readRestrictions() {
     .filter(r => usagesParticuliers.has(r.usage))
     .filter(r => !['Pas de restriction', 'Sensibilisation'].includes(r.niveauRestriction))
     .filter(r => arretesIndex[r.idArrete])
+    .filter(r => zonesAlerteInfos.get(r.idZone).idArrete === r.idArrete)
     .filter(r => {
       if (r.niveauRestriction !== 'Interdiction sur plage horaire') {
         return true
