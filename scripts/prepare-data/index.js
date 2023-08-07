@@ -1,4 +1,4 @@
-/* eslint comma-dangle: off */
+/* eslint comma-dangle: off, unicorn/switch-case-braces: off */
 import 'dotenv/config.js'
 
 import process from 'node:process'
@@ -197,8 +197,7 @@ async function readRestrictions() {
       heureFin: parseHeure(row.heure_fin),
       operateurLogiqueOu: row.est_operateur_logique_ou === 'True'
     }))
-    .filter(r => r.concerneParticulier)
-    .filter(r => usagesParticuliers.has(r.usage))
+    .filter(r => profileRestrictionsFilters.particulier(r))
     .filter(r => !['Pas de restriction', 'Sensibilisation'].includes(r.niveauRestriction))
     .filter(r => arretesIndex[r.idArrete])
     .filter(r => zonesAlerteInfos.get(r.idZone).idArrete === r.idArrete)
@@ -213,6 +212,13 @@ async function readRestrictions() {
 
 const restrictions = await readRestrictions()
 const restrictionsByZone = groupBy(restrictions, 'idZone')
+
+const profileRestrictionsFilters = {
+  particulier: r => r.concerneParticulier && usagesParticuliers.has(r.usage),
+  entreprise: r => r.concerneEntreprise,
+  exploitation: r => r.concerneExploitation,
+  collectivite: r => r.concerneCollectivite
+}
 
 function restrictionsToUsages(restrictions) {
   return chain(restrictions)
