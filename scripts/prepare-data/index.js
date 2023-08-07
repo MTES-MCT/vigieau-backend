@@ -46,37 +46,31 @@ async function readCsv(filePath) {
 async function readUsagesGuideSecheresse() {
   const rows = await readCsv('./data/restriction_guide_secheresse.csv')
 
-  const profiles = {}
-
-  for (const profile of ['particulier', 'entreprise', 'collectivite', 'exploitation']) {
-    const result = {
-      vigilance: [],
-      alerte: [],
-      alerteRenforcee: [],
-      crise: []
-    }
-
-    for (const row of rows) {
-      if (!row[`concerne_${profile}`].includes('True')) {
-        continue
-      }
-
-      const usageBase = {
-        thematique: row.thematique ? row.thematique.trim() : 'Autre',
-        usage: row.usage.trim(),
-        niveauRestriction: 'Interdiction sauf exception',
-      }
-
-      result.vigilance.push({...usageBase, details: row.vigilance.trim().replace(/\r\n/g, '\n')})
-      result.alerte.push({...usageBase, details: row.alerte.trim().replace(/\r\n/g, '\n')})
-      result.alerteRenforcee.push({...usageBase, details: row.alerte_renforcee.trim().replace(/\r\n/g, '\n')})
-      result.crise.push({...usageBase, details: row.crise.trim().replace(/\r\n/g, '\n')})
-    }
-
-    profiles[profile] = result
+  const result = {
+    vigilance: [],
+    alerte: [],
+    alerteRenforcee: [],
+    crise: []
   }
 
-  return profiles
+  for (const row of rows) {
+    if (!row.concerne_particulier.includes('True')) {
+      continue
+    }
+
+    const usageBase = {
+      thematique: row.thematique ? row.thematique.trim() : 'Autre',
+      usage: row.usage.trim(),
+      niveauRestriction: 'Interdiction sauf exception',
+    }
+
+    result.vigilance.push({...usageBase, details: row.vigilance.trim().replace(/\r\n/g, '\n')})
+    result.alerte.push({...usageBase, details: row.alerte.trim().replace(/\r\n/g, '\n')})
+    result.alerteRenforcee.push({...usageBase, details: row.alerte_renforcee.trim().replace(/\r\n/g, '\n')})
+    result.crise.push({...usageBase, details: row.crise.trim().replace(/\r\n/g, '\n')})
+  }
+
+  return result
 }
 
 const usagesGuideSecheresse = await readUsagesGuideSecheresse()
@@ -307,7 +301,7 @@ const zones = [...zonesAlerteInfos.keys()]
     if (reglesGestionIndex[zone.departement].estValide) {
       zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
     } else {
-      zone.usages = usagesGuideSecheresse.particulier[niveauRestrictionToKey(niveauAlerte)]
+      zone.usages = usagesGuideSecheresse[niveauRestrictionToKey(niveauAlerte)]
       zone.usagesGuideSecheresse = true
     }
 
