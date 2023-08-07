@@ -22,29 +22,6 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use('/maps', express.static('./data/maps'))
 
-const PROFILS = new Set(['particulier', 'entreprise', 'collectivite', 'exploitation'])
-
-app.use((req, res, next) => {
-  if (!req.query.profil) {
-    req.profil = 'particulier'
-    next()
-  }
-
-  if (req.query.profil && !PROFILS.has(req.query.profil)) {
-    throw createError(400, 'Profil inconnu')
-  }
-
-  req.profil = req.query.profil
-  next()
-})
-
-function formatZone(zone, profil) {
-  return {
-    ...omit(zone, ['profils', 'communes']),
-    ...zone.profils[profil]
-  }
-}
-
 app.get('/zones', w((req, res) => {
   if (req.query.lon && req.query.lat) {
     const lon = Number.parseFloat(req.query.lon)
@@ -55,7 +32,7 @@ app.get('/zones', w((req, res) => {
     }
 
     const zones = searchZonesByLonLat({lon, lat})
-    return res.send(zones.map(z => formatZone(z, req.profil)))
+    return res.send(zones.map(z => omit(z, 'communes')))
   }
 
   if (req.query.commune) {
@@ -65,7 +42,7 @@ app.get('/zones', w((req, res) => {
       throw createError(404, 'Aucune zone d’alerte en vigueur sur cette commune.')
     }
 
-    return res.send(zones.map(z => formatZone(z, req.profil)))
+    return res.send(zones.map(z => omit(z, 'communes')))
   }
 
   throw createError(400, 'Les paramètres lon/lat ou commune sont requis')
@@ -109,7 +86,7 @@ app.get('/reglementation', w((req, res) => {
   }
 
   const zone = computeZoneApplicable({lon, lat, codeCommune})
-  res.send(formatZone(zone, req.profil))
+  res.send(omit(zone, ['communes']))
 }))
 
 app.use((err, req, res, _next) => {
