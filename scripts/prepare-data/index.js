@@ -38,8 +38,6 @@ const usagesParticuliers = new Set([
   // 'Irrigation des cultures par système d’irrigation localisée'
 ])
 
-const PROFILES = ['particulier', 'entreprise', 'collectivite', 'exploitation']
-
 async function readCsv(filePath) {
   const data = await readFile(filePath, {encoding: 'utf8'})
   return Papa.parse(data, {skipEmptyLines: true, header: true}).data
@@ -50,7 +48,7 @@ async function readUsagesGuideSecheresse() {
 
   const profiles = {}
 
-  for (const profile of PROFILES) {
+  for (const profile of ['particulier', 'entreprise', 'collectivite', 'exploitation']) {
     const result = {
       vigilance: [],
       alerte: [],
@@ -184,13 +182,6 @@ function parseHeure(heure) {
   }
 }
 
-const PROFILE_RESTRICTIONS_FILTER = {
-  particulier: r => r.concerneParticulier && usagesParticuliers.has(r.usage),
-  entreprise: r => r.concerneEntreprise,
-  exploitation: r => r.concerneExploitation,
-  collectivite: r => r.concerneCollectivite
-}
-
 async function readRestrictions() {
   const rows = await readCsv('./data/restrictions.csv')
 
@@ -212,7 +203,7 @@ async function readRestrictions() {
       heureFin: parseHeure(row.heure_fin),
       operateurLogiqueOu: row.est_operateur_logique_ou === 'True'
     }))
-    .filter(r => PROFILE_RESTRICTIONS_FILTER.particulier(r))
+    .filter(r => profileRestrictionsFilters.particulier(r))
     .filter(r => !['Pas de restriction', 'Sensibilisation'].includes(r.niveauRestriction))
     .filter(r => arretesIndex[r.idArrete])
     .filter(r => zonesAlerteInfos.get(r.idZone).idArrete === r.idArrete)
@@ -227,6 +218,13 @@ async function readRestrictions() {
 
 const restrictions = await readRestrictions()
 const restrictionsByZone = groupBy(restrictions, 'idZone')
+
+const profileRestrictionsFilters = {
+  particulier: r => r.concerneParticulier && usagesParticuliers.has(r.usage),
+  entreprise: r => r.concerneEntreprise,
+  exploitation: r => r.concerneExploitation,
+  collectivite: r => r.concerneCollectivite
+}
 
 function restrictionsToUsages(restrictions) {
   return chain(restrictions)
@@ -280,24 +278,6 @@ function signUsages(usages) {
   return hashObj(sortBy(usages, 'usage'), {algorithm: 'md5'}).slice(0, 9)
 }
 
-function buildUsagesByProfile(restrictions, useGuideSecheresse = false, niveauAlerte) {
-  const profiles = {}
-
-  for (const profile of PROFILES) {
-    profiles[profile] = {}
-
-    profiles[profile].usages = useGuideSecheresse
-      ? usagesGuideSecheresse[profile][niveauAlerte]
-      : restrictionsToUsages(restrictions.filter(r => PROFILE_RESTRICTIONS_FILTER[profile](r)))
-
-    profiles[profile].usagesHash = profiles[profile].usages.length > 0
-      ? signUsages(profiles[profile].usages)
-      : null
-  }
-
-  return profiles
-}
-
 function niveauRestrictionToKey(niveauRestriction) {
   if (niveauRestriction === 'Vigilance') {
     return 'vigilance'
@@ -325,12 +305,13 @@ const zones = [...zonesAlerteInfos.keys()]
     zone.niveauAlerte = niveauAlerte
 
     if (reglesGestionIndex[zone.departement].estValide) {
-      zone.profils = buildUsagesByProfile(restrictionsByZone[idZone] || [], false)
+      zone.usages = restrictionsByZone[idZone] ? restrictionsToUsages(restrictionsByZone[idZone]) : []
     } else {
-      zone.profils = buildUsagesByProfile(null, true, niveauRestrictionToKey(niveauAlerte))
+      zone.usages = usagesGuideSecheresse.particulier[niveauRestrictionToKey(niveauAlerte)]
       zone.usagesGuideSecheresse = true
     }
 
+    zone.usagesHash = zone.usages.length > 0 ? signUsages(zone.usages) : null
     zone.communes = computeCommunes(zone)
     return zone
   })
@@ -342,7 +323,7 @@ const featureCollection = {
   type: 'FeatureCollection',
   features: zones.map(zone => ({
     type: 'Feature',
-    properties: omit(zone, ['profils', 'communes', 'arrete']),
+    properties: omit(zone, ['usages', 'communes', 'arrete']),
     geometry: getZoneGeometry(zone.idZone, true)
   }))
 }
