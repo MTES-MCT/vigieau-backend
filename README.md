@@ -93,3 +93,13 @@ https://api.vigieau.gouv.fr/reglementation?lon=3.16265&lat=43.37829&commune=3414
   "usagesHash": "4a10eb239"
 }
 ```
+
+#### Erreurs possibles
+
+* `400 La paramètre commune est requis`
+* `400 Commune invalide`
+* `400 Coordonnées non valides`
+* `404 Les données pour ce département ne sont pas disponibles` : Le département n’est pas couvert par VigiEau (certains territoires ultramarins)
+* `404 Aucune zone d’alerte en vigueur pour la requête donnée` : votre préfecture n’a pas défini de zone d’alerte pour cette localisation ou alors vous êtes en limite technique
+* `409 Veuillez renseigner une adresse pour préciser la réglementation applicable` : la commune est traversée par plusieurs zones d’alertes, vous devez préciser la localisation avec `lon`/`lat`
+* `500 Un problème avec les données ne permet pas de répondre à votre demande` : Notre algorithme n’a pas réussi à déterminer la zone d’alerte correspondant à votre situation.

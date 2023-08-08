@@ -104,7 +104,7 @@ app.get('/reglementation', w((req, res) => {
     lat = Number.parseFloat(req.query.lat)
 
     if (Number.isNaN(lon) || Number.isNaN(lat) || lon <= -180 || lon >= 180 || lat <= -85 || lat >= 85) {
-      throw createError(400, 'lon/lat are not valid')
+      throw createError(400, 'Coordonnées non valides')
     }
   }
 
