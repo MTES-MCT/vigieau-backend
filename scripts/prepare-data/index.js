@@ -212,7 +212,6 @@ async function readRestrictions() {
       heureFin: parseHeure(row.heure_fin),
       operateurLogiqueOu: row.est_operateur_logique_ou === 'True'
     }))
-    .filter(r => PROFILE_RESTRICTIONS_FILTER.particulier(r))
     .filter(r => !['Pas de restriction', 'Sensibilisation'].includes(r.niveauRestriction))
     .filter(r => arretesIndex[r.idArrete])
     .filter(r => zonesAlerteInfos.get(r.idZone).idArrete === r.idArrete)
