@@ -8,7 +8,7 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
-import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
+import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable, getDepartements} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
 
@@ -79,6 +79,10 @@ app.get('/departements/:codeDepartement', w((req, res) => {
   }
 
   res.send(reglesGestion)
+}))
+
+app.get('/departements', w((req, res) => {
+  res.send(getDepartements());
 }))
 
 app.get('/reglementation', w((req, res) => {

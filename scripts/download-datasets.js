@@ -48,6 +48,11 @@ await downloadFile(
   'communes-1000m.geojson'
 )
 
+await downloadFile(
+  'https://static.data.gouv.fr/resources/departements-et-leurs-regions/20190815-175403/departements-region.json',
+  'departements.json'
+)
+
 async function downloadFile(url, name) {
   const data = await got(url, {decompress: true}).buffer()
   await writeFile(`./data/${name}`, data)
