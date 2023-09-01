@@ -8,9 +8,13 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
+import mongo from './lib/util/mongo.js'
+
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
+
+await mongo.connect()
 
 const app = express()
 
