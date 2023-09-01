@@ -16,6 +16,7 @@ import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from '
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
 import {PROFILES} from './lib/shared.js'
+import {subscribe} from './lib/subscribe.js'
 
 await mongo.connect()
 
@@ -32,7 +33,7 @@ app.use('/maps', express.static('./data/maps'))
 app.use((req, res, next) => {
   if (!req.query.profil) {
     req.profil = 'particulier'
-    next()
+    return next()
   }
 
   if (req.query.profil && !PROFILES.has(req.query.profil)) {
@@ -115,6 +116,15 @@ app.get('/reglementation', w((req, res) => {
 
   const zone = computeZoneApplicable({lon, lat, codeCommune})
   res.send(formatZone(zone, req.profil))
+}))
+
+app.post('/subscribe', express.json(), w(async (req, res) => {
+  const status = await subscribe(req.body)
+
+  res.status(202).send({
+    code: 202,
+    message: status === 'created' ? 'Inscription prise en compte' : 'Inscription mise à jour'
+  })
 }))
 
 app.use(errorHandler)
