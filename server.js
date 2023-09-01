@@ -15,6 +15,7 @@ import errorHandler from './lib/util/error-handler.js'
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
+import {PROFILES} from './lib/shared.js'
 
 await mongo.connect()
 
@@ -28,15 +29,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use('/maps', express.static('./data/maps'))
 
-const PROFILS = new Set(['particulier', 'entreprise', 'collectivite', 'exploitation'])
-
 app.use((req, res, next) => {
   if (!req.query.profil) {
     req.profil = 'particulier'
     next()
   }
 
-  if (req.query.profil && !PROFILS.has(req.query.profil)) {
+  if (req.query.profil && !PROFILES.has(req.query.profil)) {
     throw createError(400, 'Profil inconnu')
   }
 
