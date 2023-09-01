@@ -22,6 +22,10 @@ await mongo.connect()
 
 const app = express()
 
+if (process.env.NODE_ENV === 'production') {
+  app.enable('trust proxy')
+}
+
 app.use(cors({origin: true}))
 
 if (process.env.NODE_ENV !== 'production') {
@@ -119,7 +123,7 @@ app.get('/reglementation', w((req, res) => {
 }))
 
 app.post('/subscribe', express.json(), w(async (req, res) => {
-  const status = await subscribe(req.body)
+  const status = await subscribe(req.body, req.ip)
 
   res.status(202).send({
     code: 202,
