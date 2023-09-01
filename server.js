@@ -9,6 +9,7 @@ import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
 import mongo from './lib/util/mongo.js'
+import w from './lib/util/w.js'
 
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
@@ -130,13 +131,3 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`Start listening on port ${PORT}`)
 })
-
-function w(handler) {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res, next)
-    } catch (error) {
-      next(error)
-    }
-  }
-}
