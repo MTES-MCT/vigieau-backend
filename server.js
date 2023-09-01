@@ -10,6 +10,7 @@ import {omit} from 'lodash-es'
 
 import mongo from './lib/util/mongo.js'
 import w from './lib/util/w.js'
+import errorHandler from './lib/util/error-handler.js'
 
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
@@ -117,14 +118,7 @@ app.get('/reglementation', w((req, res) => {
   res.send(formatZone(zone, req.profil))
 }))
 
-app.use((err, req, res, _next) => {
-  res.status(err.statusCode || 500).send({
-    code: err.statusCode || 500,
-    message: err.message,
-    arretes: err.arretes,
-    niveauAlerte: err.niveauAlerte
-  })
-})
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000
 
