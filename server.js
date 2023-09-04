@@ -8,11 +8,23 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 
+import mongo from './lib/util/mongo.js'
+import w from './lib/util/w.js'
+import errorHandler from './lib/util/error-handler.js'
+
 import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable, getDepartements} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
+import {PROFILES} from './lib/shared.js'
+import {subscribe} from './lib/subscribe.js'
+
+await mongo.connect()
 
 const app = express()
+
+if (process.env.NODE_ENV === 'production') {
+  app.enable('trust proxy')
+}
 
 app.use(cors({origin: true}))
 
@@ -22,15 +34,13 @@ if (process.env.NODE_ENV !== 'production') {
 
 app.use('/maps', express.static('./data/maps'))
 
-const PROFILS = new Set(['particulier', 'entreprise', 'collectivite', 'exploitation'])
-
 app.use((req, res, next) => {
   if (!req.query.profil) {
     req.profil = 'particulier'
-    next()
+    return next()
   }
 
-  if (req.query.profil && !PROFILS.has(req.query.profil)) {
+  if (req.query.profil && !PROFILES.has(req.query.profil)) {
     throw createError(400, 'Profil inconnu')
   }
 
@@ -116,27 +126,19 @@ app.get('/reglementation', w((req, res) => {
   res.send(formatZone(zone, req.profil))
 }))
 
-app.use((err, req, res, _next) => {
-  res.status(err.statusCode || 500).send({
-    code: err.statusCode || 500,
-    message: err.message,
-    arretes: err.arretes,
-    niveauAlerte: err.niveauAlerte
+app.post('/subscribe', express.json(), w(async (req, res) => {
+  const status = await subscribe(req.body, req.ip)
+
+  res.status(202).send({
+    code: 202,
+    message: status === 'created' ? 'Inscription prise en compte' : 'Inscription mise à jour'
   })
-})
+}))
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000
 
 app.listen(PORT, () => {
   console.log(`Start listening on port ${PORT}`)
 })
-
-function w(handler) {
-  return async (req, res, next) => {
-    try {
-      await handler(req, res, next)
-    } catch (error) {
-      next(error)
-    }
-  }
-}
