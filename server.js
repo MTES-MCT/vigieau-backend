@@ -12,7 +12,12 @@ import mongo from './lib/util/mongo.js'
 import w from './lib/util/w.js'
 import errorHandler from './lib/util/error-handler.js'
 
-import {searchZonesByLonLat, searchZonesByCommune, computeZoneApplicable, getDepartements} from './lib/search.js'
+import {
+  searchZonesByLonLat,
+  searchZonesByCommune,
+  computeZoneApplicable,
+  searchDepartements
+} from './lib/search.js'
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
 import {PROFILES} from './lib/shared.js'
@@ -92,7 +97,7 @@ app.get('/departements/:codeDepartement', w((req, res) => {
 }))
 
 app.get('/departements', w((req, res) => {
-  res.send(getDepartements())
+  res.send(searchDepartements())
 }))
 
 app.get('/reglementation', w((req, res) => {
