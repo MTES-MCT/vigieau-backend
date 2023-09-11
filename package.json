@@ -5,6 +5,7 @@
   "private": false,
   "type": "module",
   "scripts": {
+    "dev": "nodemon server.js",
     "start": "node server.js",
     "lint": "xo",
     "download-datasets": "node scripts/download-datasets.js",
@@ -33,7 +34,8 @@
     "sharp": "^0.32.1"
   },
   "devDependencies": {
-    "xo": "^0.54.2"
+    "xo": "^0.54.2",
+    "nodemon": "^3.0.1"
   },
   "xo": {
     "semicolon": false,

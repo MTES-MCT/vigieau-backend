@@ -21,6 +21,7 @@ for (let i = 0; i < 100_000; i++) {
   if (i % 1000 === 0) {
     console.log(i)
   }
+
   search({lon, lat})
 }
 
