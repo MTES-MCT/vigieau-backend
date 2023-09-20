@@ -7,6 +7,7 @@ import morgan from 'morgan'
 import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
+import {expressjwt} from 'express-jwt'
 
 import mongo from './lib/util/mongo.js'
 import w from './lib/util/w.js'
@@ -21,11 +22,17 @@ import {
 import {getReglesGestion} from './lib/regles-gestion.js'
 import {getCommune, normalizeCodeCommune} from './lib/cog.js'
 import {PROFILES} from './lib/shared.js'
-import {subscribe} from './lib/subscribe.js'
+import {
+  subscribe,
+  deleteSubscriptionById,
+  deleteSubscriptionByEmail,
+  getSubscriptionsByEmail
+} from './lib/subscribe.js'
 
 await mongo.connect()
 
 const app = express()
+const JWT_OPTIONS = {secret: process.env.JWT_SECRET, algorithms: ['HS256']}
 
 if (process.env.NODE_ENV === 'production') {
   app.enable('trust proxy')
@@ -138,6 +145,20 @@ app.post('/subscribe', express.json(), w(async (req, res) => {
     code: 202,
     message: status === 'created' ? 'Inscription prise en compte' : 'Inscription mise à jour'
   })
+}))
+
+app.get('/subscriptions', expressjwt(JWT_OPTIONS), w(async (req, res) => {
+  res.send(await getSubscriptionsByEmail(req.auth.email))
+}))
+
+app.delete('/unsubscribe/all', expressjwt(JWT_OPTIONS), w(async (req, res) => {
+  await deleteSubscriptionByEmail(req.auth.email)
+  res.status(204).send()
+}))
+
+app.delete('/unsubscribe/:id', expressjwt(JWT_OPTIONS), w(async (req, res) => {
+  await deleteSubscriptionById(req.params.id, req.auth.email)
+  res.status(204).send()
 }))
 
 app.use(errorHandler)
