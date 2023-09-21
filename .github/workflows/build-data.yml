@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     strategy:
       matrix:
@@ -23,6 +23,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - run: yarn download-datasets
       - run: yarn prepare-data
+      - run: apt install -y libuv1 libopengl0 libjpeg-turbo8 libcurl4 libicu66
       - name: Compute static maps
         uses: coactions/setup-xvfb@v1
         with:
