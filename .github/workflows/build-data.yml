@@ -1,0 +1,27 @@
+name: Build data
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - run: yarn --frozen-lockfile
+      - run: yarn download-datasets
+      - run: yarn prepare-data
+      - name: Compute static maps
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: yarn compute-maps
