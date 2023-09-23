@@ -1,6 +1,8 @@
 name: Build data
 
 on:
+  schedule:
+    - cron:  '5 7 * * *'
   workflow_dispatch:
   push:
     branches: ["master"]
@@ -9,16 +11,12 @@ jobs:
   build:
     runs-on: ubuntu-20.04
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-
     steps:
       - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
       - run: yarn download-datasets
@@ -38,3 +36,15 @@ jobs:
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           S3_VHOST: ${{ secrets.S3_VHOST }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - uses: scalingo-community/setup-scalingo@v0.1.1
+        with:
+          region: 'osc-fr1'
+          api_token: ${{ secrets.SCALINGO_API_TOKEN }}
+          app_name: 'preservonsleau-api-prod'
+      - run: scalingo restart
