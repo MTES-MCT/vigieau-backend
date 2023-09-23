@@ -23,8 +23,18 @@ jobs:
       - run: yarn --frozen-lockfile
       - run: yarn download-datasets
       - run: yarn prepare-data
-      - run: sudo apt-get install -y libuv1 libopengl0 libjpeg-turbo8 libcurl4 libicu66
+      - name: Prepare rendering toolchain
+        run: sudo apt-get install -y libuv1 libopengl0 libjpeg-turbo8 libcurl4 libicu66
       - name: Compute static maps
         uses: coactions/setup-xvfb@v1
         with:
           run: yarn compute-maps
+      - name: Create and upload bundle
+        run: yarn upload-bundle
+        env:
+          S3_REGION: ${{ secrets.S3_REGION }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
+          S3_VHOST: ${{ secrets.S3_VHOST }}
