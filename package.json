@@ -12,8 +12,7 @@
     "prepare-data": "node scripts/prepare-data/index.js",
     "compute-maps": "node scripts/compute-maps.js",
     "upload-bundle": "node scripts/upload-bundle.js",
-    "download-bundle": "node scripts/download-bundle.js",
-    "scalingo-postbuild": "yarn download-bundle"
+    "download-bundle": "node scripts/download-bundle.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.418.0",
