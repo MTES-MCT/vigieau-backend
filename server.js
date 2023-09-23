@@ -151,12 +151,12 @@ app.get('/subscriptions', expressjwt(JWT_OPTIONS), w(async (req, res) => {
   res.send(await getSubscriptionsByEmail(req.auth.email))
 }))
 
-app.delete('/unsubscribe/all', expressjwt(JWT_OPTIONS), w(async (req, res) => {
+app.delete('/subscriptions/all', expressjwt(JWT_OPTIONS), w(async (req, res) => {
   await deleteSubscriptionByEmail(req.auth.email)
   res.status(204).send()
 }))
 
-app.delete('/unsubscribe/:id', expressjwt(JWT_OPTIONS), w(async (req, res) => {
+app.delete('/subscriptions/:id', expressjwt(JWT_OPTIONS), w(async (req, res) => {
   await deleteSubscriptionById(req.params.id, req.auth.email)
   res.status(204).send()
 }))
