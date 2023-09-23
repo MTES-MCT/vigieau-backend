@@ -138,14 +138,17 @@ app.get('/reglementation', w((req, res) => {
   res.send(formatZone(zone, req.profil))
 }))
 
-app.post('/subscribe', express.json(), w(async (req, res) => {
+async function subscribeHandler(req, res) {
   const status = await subscribe(req.body, req.ip)
 
   res.status(202).send({
     code: 202,
     message: status === 'created' ? 'Inscription prise en compte' : 'Inscription mise à jour'
   })
-}))
+}
+
+app.post('/subscribe', express.json(), w(subscribeHandler))
+app.post('/subscriptions', express.json(), w(subscribeHandler))
 
 app.get('/subscriptions', expressjwt(JWT_OPTIONS), w(async (req, res) => {
   res.send(await getSubscriptionsByEmail(req.auth.email))
