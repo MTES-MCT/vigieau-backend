@@ -8,6 +8,7 @@ import cors from 'cors'
 import createError from 'http-errors'
 import {omit} from 'lodash-es'
 import {expressjwt} from 'express-jwt'
+import TTLCache from '@isaacs/ttlcache'
 
 import mongo from './lib/util/mongo.js'
 import w from './lib/util/w.js'
@@ -165,9 +166,14 @@ app.delete('/subscriptions/:id', expressjwt(JWT_OPTIONS), w(async (req, res) => 
   res.status(204).send()
 }))
 
+const cache = new TTLCache({ttl: 5 * 60 * 1000}) // 5 minutes
+
 app.get('/data/usagers-zones.csv', w(async (req, res) => {
-  const csvContent = await computeUsagersZones()
-  res.type('text/csv').send(csvContent)
+  if (!cache.has('usagers-zones.csv')) {
+    cache.set('usagers-zones.csv', await computeUsagersZones())
+  }
+
+  res.type('text/csv').send(cache.get('usagers-zones.csv'))
 }))
 
 app.use(errorHandler)
