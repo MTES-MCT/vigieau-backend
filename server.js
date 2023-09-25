@@ -27,7 +27,7 @@ import {
   deleteSubscriptionById,
   deleteSubscriptionByEmail,
   getSubscriptionsByEmail
-} from './lib/subscribe.js'
+} from './lib/subscriptions.js'
 
 await mongo.connect()
 
