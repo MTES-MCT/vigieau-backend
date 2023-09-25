@@ -28,6 +28,7 @@ import {
   deleteSubscriptionByEmail,
   getSubscriptionsByEmail
 } from './lib/subscriptions.js'
+import {computeUsagersZones} from './lib/csv.js'
 
 await mongo.connect()
 
@@ -162,6 +163,11 @@ app.delete('/subscriptions/all', expressjwt(JWT_OPTIONS), w(async (req, res) => 
 app.delete('/subscriptions/:id', expressjwt(JWT_OPTIONS), w(async (req, res) => {
   await deleteSubscriptionById(req.params.id, req.auth.email)
   res.status(204).send()
+}))
+
+app.get('/data/usagers-zones.csv', w(async (req, res) => {
+  const csvContent = await computeUsagersZones()
+  res.type('text/csv').send(csvContent)
 }))
 
 app.use(errorHandler)
