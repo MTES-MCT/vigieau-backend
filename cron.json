@@ -1,7 +1,8 @@
 {
   "jobs": [
     {
-      "command": "0 17 * * * yarn download-bundle && yarn update-situations"
+      "command": "10 17 * * * yarn download-bundle && yarn update-situations",
+      "size": "2XL"
     }
   ]
 }
