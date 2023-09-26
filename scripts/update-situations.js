@@ -1,10 +1,24 @@
 #!/usr/bin/env node
+/* eslint-disable max-depth */
 import 'dotenv/config.js'
-
+import process from 'node:process'
+import got from 'got'
+import Papa from 'papaparse'
 import mongo from '../lib/util/mongo.js'
 import {computeNiveauxAlerte} from '../lib/search.js'
 import {getCommune} from '../lib/cog.js'
 import {sendMessage} from '../lib/util/webhook.js'
+
+const {PROPLUVIA_DATA_URL} = process.env
+
+async function readValidatedZones(baseUrl) {
+  const url = `${baseUrl}/csv/alerting/latest/zones_changement_niveau_alerte.csv`
+  const csvContent = await got(url).text()
+  const csvResult = Papa.parse(csvContent, {header: true, skipEmptyLines: true})
+  return new Set(csvResult.data.map(row => row.id_zone))
+}
+
+const validatedZones = await readValidatedZones(PROPLUVIA_DATA_URL)
 
 await mongo.connect()
 
@@ -21,8 +35,8 @@ const stats = {
 
 function doNothing() {}
 
-function zoneIsValidated() {
-  return true
+function zoneIsValidated(idZone) {
+  return validatedZones.has(idZone)
 }
 
 async function notify({email, niveauAlerte, codeCommune, libelleLocalisation}) {
@@ -38,13 +52,13 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
   try {
     const {zones, particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
 
-    if (zones.some(idZone => !zoneIsValidated(idZone))) {
-      stats['Non validé']++
-      continue
-    }
-
     if (profil === 'particulier') {
       if (subscription?.situation?.particulier !== particulier) {
+        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+          stats['Non validé']++
+          continue
+        }
+
         await notify({
           email,
           niveauAlerte: particulier,
@@ -55,6 +69,11 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
       }
     } else {
       if (sou && subscription?.situation?.sou !== sou) {
+        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+          stats['Non validé']++
+          continue
+        }
+
         await notify({
           email,
           niveauAlerte: sou,
@@ -65,6 +84,11 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
       }
 
       if (sup && subscription?.situation?.sup !== sup) {
+        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+          stats['Non validé']++
+          continue
+        }
+
         await notify({
           email,
           niveauAlerte: sup,
