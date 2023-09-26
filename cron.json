@@ -1,7 +1,7 @@
 {
   "jobs": [
     {
-      "command": "0 16 * * * yarn update-situations"
+      "command": "0 17 * * * yarn download-bundle && yarn update-situations"
     }
   ]
 }
