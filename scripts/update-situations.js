@@ -5,8 +5,8 @@ import got from 'got'
 import Papa from 'papaparse'
 import mongo from '../lib/util/mongo.js'
 import {computeNiveauxAlerte} from '../lib/search.js'
-import {getCommune} from '../lib/cog.js'
 import {sendMessage} from '../lib/util/webhook.js'
+import {sendSituationUpdate} from '../lib/util/sendmail.js'
 
 const {PROPLUVIA_DATA_URL} = process.env
 
@@ -32,16 +32,8 @@ const stats = {
   'Non validé': 0
 }
 
-function doNothing() {}
-
 function zoneIsValidated(idZone) {
   return validatedZones.has(idZone)
-}
-
-async function notify({email, niveauAlerte, codeCommune, libelleLocalisation}) {
-  stats[niveauAlerte]++
-  const commune = getCommune(codeCommune).nom
-  doNothing({email, libelleLocalisation, commune, niveauAlerte})
 }
 
 async function updateSituation(subscription) {
@@ -59,12 +51,15 @@ async function updateSituation(subscription) {
           return
         }
 
-        await notify({
+        stats[particulier]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: particulier,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
     } else {
@@ -74,12 +69,15 @@ async function updateSituation(subscription) {
           return
         }
 
-        await notify({
+        stats[sou]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: sou,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
 
@@ -89,12 +87,15 @@ async function updateSituation(subscription) {
           return
         }
 
-        await notify({
+        stats[sup]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: sup,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
     }
