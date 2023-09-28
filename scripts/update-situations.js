@@ -50,7 +50,7 @@ async function updateSituation(subscription) {
 
   try {
     const {zones, particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
-    const zonesOk = zones.every(idZone => !zoneIsValidated(idZone))
+    const zonesOk = zones.every(idZone => zoneIsValidated(idZone))
 
     if (profil === 'particulier') {
       if (subscription?.situation?.particulier !== particulier) {
