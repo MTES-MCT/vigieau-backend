@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable max-depth */
 import 'dotenv/config.js'
 import process from 'node:process'
 import got from 'got'
@@ -45,18 +44,19 @@ async function notify({email, niveauAlerte, codeCommune, libelleLocalisation}) {
   doNothing({email, libelleLocalisation, commune, niveauAlerte})
 }
 
-for await (const subscription of mongo.db.collection('subscriptions').find({})) {
+async function updateSituation(subscription) {
   const {_id, email, lon, lat, commune, profil, typesZones, libelleLocalisation} = subscription
   let situationUpdated = false
 
   try {
     const {zones, particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
+    const zonesOk = zones.every(idZone => !zoneIsValidated(idZone))
 
     if (profil === 'particulier') {
       if (subscription?.situation?.particulier !== particulier) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
         await notify({
@@ -69,9 +69,9 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
       }
     } else {
       if (sou && subscription?.situation?.sou !== sou) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
         await notify({
@@ -84,9 +84,9 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
       }
 
       if (sup && subscription?.situation?.sup !== sup) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
         await notify({
@@ -111,6 +111,10 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
     stats['En erreur']++
     console.log(error)
   }
+}
+
+for await (const subscription of mongo.db.collection('subscriptions').find({})) {
+  await updateSituation(subscription)
 }
 
 const sentences = []
