@@ -8,7 +8,7 @@ import mbgl from '@maplibre/maplibre-gl-native'
 import sharp from 'sharp'
 import {getCommunes} from '../lib/cog.js'
 import {getReglesGestion} from '../lib/regles-gestion.js'
-import {getTypePrio, computeZoneScore, getNiveau} from '../lib/util.js'
+import {getTypePrio, computeZoneScore, getNiveau} from '../lib/shared.js'
 
 async function readCommunesGeometries() {
   const communesGeometries = new Map()
