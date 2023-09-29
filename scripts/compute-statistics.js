@@ -15,7 +15,7 @@ async function computeStatistics() {
     .sort({date: -1})
     .limit(1)
     .toArray()
-  const lastStateDate = lastStat[0].date ?? new Date('2023-07-11')
+  const lastStateDate = lastStat[0]?.date ?? new Date('2023-07-11')
   const matomoDate = `date=${generateDateString(lastStateDate)},today`
   const subscriptions = await mongo.db.collection('subscriptions')
     .find()
@@ -33,7 +33,7 @@ async function computeStatistics() {
     const stat = {date: new Date(d)}
     const day = generateDateString(d)
 
-    stat.apiCalls = visitsByDay[day] ?? 0
+    stat.visits = visitsByDay[day] ?? 0
 
     let restrictionsSearch = restrictionsSearchsByDay[day]
     restrictionsSearch = restrictionsSearch?.find(matomoEvent => matomoEvent.label === 'CODE INSEE')?.nb_events
