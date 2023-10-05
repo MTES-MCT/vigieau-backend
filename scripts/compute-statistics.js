@@ -75,14 +75,14 @@ async function computeStatistics() {
     }
 
     for (const dep of departements) {
-      regionRepartitionTmp[dep.region.nom] = 0
+      regionRepartitionTmp[dep.region.code] = 0
     }
 
     if (departementRepartitionByDay[day]) {
       for (const matomoEvent of departementRepartitionByDay[day]) {
         if (matomoEvent.Events_EventAction === 'CODE DEPARTEMENT') {
           departementRepartitionTmp[matomoEvent.Events_EventName] += matomoEvent.nb_events
-          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.Events_EventName).region.nom] += matomoEvent.nb_events
+          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.Events_EventName).region.code] += matomoEvent.nb_events
         }
       }
     }
