@@ -25,8 +25,8 @@ async function computeStatistics() {
   const restrictionsSearchsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=1&${matomoDate}`).json()
   const arreteDownloadsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=2&${matomoDate}`).json()
   const arreteCadreDownloadsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=3&${matomoDate}`).json()
-  const profileRepartitionByDay = await got(`${matomoUrl}&method=Events.getName&secondaryDimension=eventCategory&flat=1&${matomoDate}`).json()
-  const departementRepartitionByDay = await got(`${matomoUrl}&method=Events.getName&secondaryDimension=eventAction&flat=1&${matomoDate}`).json()
+  const profileRepartitionByDay = await got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=1&${matomoDate}`).json()
+  const departementRepartitionByDay = await got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=2&${matomoDate}`).json()
 
   const statsToSave = []
   for (const d = lastStateDate; d < new Date(); d.setDate(d.getDate() + 1)) {
@@ -59,7 +59,7 @@ async function computeStatistics() {
     if (profileRepartitionByDay[day]) {
       for (const profile in profileRepartitionTmp) {
         if (Object.hasOwn(profileRepartitionTmp, profile)) {
-          const event = profileRepartitionByDay[day].find(matomoEvent => matomoEvent.Events_EventName === profile)
+          const event = profileRepartitionByDay[day].find(matomoEvent => matomoEvent.label === profile)
           profileRepartitionTmp[profile] += event ? event.nb_events : 0
         }
       }
@@ -80,9 +80,9 @@ async function computeStatistics() {
 
     if (departementRepartitionByDay[day]) {
       for (const matomoEvent of departementRepartitionByDay[day]) {
-        if (matomoEvent.Events_EventAction === 'CODE DEPARTEMENT') {
-          departementRepartitionTmp[matomoEvent.Events_EventName] += matomoEvent.nb_events
-          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.Events_EventName).region.code] += matomoEvent.nb_events
+        if (Object.prototype.hasOwnProperty.call(departementRepartitionTmp, matomoEvent.label)) {
+          departementRepartitionTmp[matomoEvent.label] += matomoEvent.nb_events
+          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.label).region.code] += matomoEvent.nb_events
         }
       }
     }
