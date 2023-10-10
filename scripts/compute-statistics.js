@@ -7,7 +7,7 @@ import got from 'got'
 import {getDepartements} from '../lib/cog.js'
 import mongo from '../lib/util/mongo.js'
 
-const matomoUrl = `https://stats.data.gouv.fr/?module=API&token_auth=${process.env.MATOMO_API_KEY}&format=JSON&idSite=285&period=day`
+const matomoUrl = `${process.env.MATOMO_URL}/?module=API&token_auth=${process.env.MATOMO_API_KEY}&format=JSON&idSite=${process.env.MATOMO_ID_SITE}&period=day`
 
 async function computeStatistics() {
   const lastStat = await mongo.db.collection('statistics')
