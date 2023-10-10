@@ -3,6 +3,10 @@
     {
       "command": "0 16 * * * yarn download-bundle && yarn update-situations",
       "size": "2XL"
+    },
+    {
+      "command": "0 */3 * * * yarn compute-statistics",
+      "size": "S"
     }
   ]
 }

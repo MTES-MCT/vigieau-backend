@@ -31,6 +31,7 @@ import {
   getSubscriptionsByEmail
 } from './lib/subscriptions.js'
 import {computeUsagersZones} from './lib/csv.js'
+import {getStatistics} from './lib/statistics.js'
 
 await mongo.connect()
 
@@ -185,6 +186,14 @@ app.get('/data/usagers-zones.csv', w(async (req, res) => {
   }
 
   res.type('text/csv').send(cache.get('usagers-zones.csv'))
+}))
+
+app.get('/statistics', w(async (req, res) => {
+  if (!cache.has('statistics.json')) {
+    cache.set('statistics.json', await getStatistics())
+  }
+
+  res.send(cache.get('statistics.json'))
 }))
 
 app.use(errorHandler)
