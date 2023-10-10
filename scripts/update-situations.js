@@ -1,13 +1,12 @@
 #!/usr/bin/env node
-/* eslint-disable max-depth */
 import 'dotenv/config.js'
 import process from 'node:process'
 import got from 'got'
 import Papa from 'papaparse'
 import mongo from '../lib/util/mongo.js'
 import {computeNiveauxAlerte} from '../lib/search.js'
-import {getCommune} from '../lib/cog.js'
 import {sendMessage} from '../lib/util/webhook.js'
+import {sendSituationUpdate} from '../lib/util/sendmail.js'
 
 const {PROPLUVIA_DATA_URL} = process.env
 
@@ -33,68 +32,70 @@ const stats = {
   'Non validé': 0
 }
 
-function doNothing() {}
-
 function zoneIsValidated(idZone) {
   return validatedZones.has(idZone)
 }
 
-async function notify({email, niveauAlerte, codeCommune, libelleLocalisation}) {
-  stats[niveauAlerte]++
-  const commune = getCommune(codeCommune).nom
-  doNothing({email, libelleLocalisation, commune, niveauAlerte})
-}
-
-for await (const subscription of mongo.db.collection('subscriptions').find({})) {
+async function updateSituation(subscription) {
   const {_id, email, lon, lat, commune, profil, typesZones, libelleLocalisation} = subscription
   let situationUpdated = false
 
   try {
     const {zones, particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
+    const zonesOk = zones.every(idZone => zoneIsValidated(idZone))
 
     if (profil === 'particulier') {
       if (subscription?.situation?.particulier !== particulier) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
-        await notify({
+        stats[particulier]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: particulier,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
     } else {
       if (sou && subscription?.situation?.sou !== sou) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
-        await notify({
+        stats[sou]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: sou,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
 
       if (sup && subscription?.situation?.sup !== sup) {
-        if (zones.some(idZone => !zoneIsValidated(idZone))) {
+        if (!zonesOk) {
           stats['Non validé']++
-          continue
+          return
         }
 
-        await notify({
+        stats[sup]++
+
+        await sendSituationUpdate({
           email,
           niveauAlerte: sup,
           codeCommune: commune,
           libelleLocalisation
         })
+
         situationUpdated = true
       }
     }
@@ -111,6 +112,10 @@ for await (const subscription of mongo.db.collection('subscriptions').find({})) 
     stats['En erreur']++
     console.log(error)
   }
+}
+
+for await (const subscription of mongo.db.collection('subscriptions').find({})) {
+  await updateSituation(subscription)
 }
 
 const sentences = []

@@ -17,6 +17,7 @@ import errorHandler from './lib/util/error-handler.js'
 import {
   searchZonesByLonLat,
   searchZonesByCommune,
+  getZone,
   computeZoneApplicable,
   searchDepartements
 } from './lib/search.js'
@@ -69,6 +70,16 @@ function formatZone(zone, profil) {
     ...zone.profils[profil]
   }
 }
+
+app.get('/zones/:idZone', (w((req, res) => {
+  const zone = getZone(req.params.idZone)
+
+  if (!zone) {
+    throw createError(404, 'Aucune zone d’alerte en vigueur ne correspond à cet identifiant')
+  }
+
+  res.send(formatZone(zone, req.profil))
+})))
 
 app.get('/zones', w((req, res) => {
   if (req.query.lon && req.query.lat) {
