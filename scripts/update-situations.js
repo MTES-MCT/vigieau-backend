@@ -1,23 +1,9 @@
 #!/usr/bin/env node
 import 'dotenv/config.js'
-import process from 'node:process'
-import got from 'got'
-import Papa from 'papaparse'
 import mongo from '../lib/util/mongo.js'
 import {computeNiveauxAlerte} from '../lib/search.js'
 import {sendMessage} from '../lib/util/webhook.js'
 import {sendSituationUpdate} from '../lib/util/sendmail.js'
-
-const {PROPLUVIA_DATA_URL} = process.env
-
-async function readValidatedZones(baseUrl) {
-  const url = `${baseUrl}/csv/alerting/latest/zones_changement_niveau_alerte.csv`
-  const csvContent = await got(url).text()
-  const csvResult = Papa.parse(csvContent, {header: true, skipEmptyLines: true})
-  return new Set(csvResult.data.map(row => row.id_zone))
-}
-
-const validatedZones = await readValidatedZones(PROPLUVIA_DATA_URL)
 
 await mongo.connect()
 
@@ -28,12 +14,7 @@ const stats = {
   'Alerte renforcée': 0,
   Crise: 0,
   'Pas de changement': 0,
-  'En erreur': 0,
-  'Non validé': 0
-}
-
-function zoneIsValidated(idZone) {
-  return validatedZones.has(idZone)
+  'En erreur': 0
 }
 
 async function updateSituation(subscription) {
@@ -41,16 +22,10 @@ async function updateSituation(subscription) {
   let situationUpdated = false
 
   try {
-    const {zones, particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
-    const zonesOk = zones.every(idZone => zoneIsValidated(idZone))
+    const {particulier, sou, sup} = computeNiveauxAlerte({lon, lat, commune, profil, typesZones})
 
     if (profil === 'particulier') {
       if (subscription?.situation?.particulier !== particulier) {
-        if (!zonesOk) {
-          stats['Non validé']++
-          return
-        }
-
         stats[particulier]++
 
         await sendSituationUpdate({
@@ -64,11 +39,6 @@ async function updateSituation(subscription) {
       }
     } else {
       if (sou && subscription?.situation?.sou !== sou) {
-        if (!zonesOk) {
-          stats['Non validé']++
-          return
-        }
-
         stats[sou]++
 
         await sendSituationUpdate({
@@ -82,11 +52,6 @@ async function updateSituation(subscription) {
       }
 
       if (sup && subscription?.situation?.sup !== sup) {
-        if (!zonesOk) {
-          stats['Non validé']++
-          return
-        }
-
         stats[sup]++
 
         await sendSituationUpdate({
@@ -146,10 +111,6 @@ if (stats['Pas de changement']) {
 
 if (stats['En erreur']) {
   sentences.push(`- **${stats['En erreur']}** usagers sont en erreur 🧨`)
-}
-
-if (stats['Non validé']) {
-  sentences.push(`- **${stats['Non validé']}** situations non évaluées en attente de validation de leur arrêté 🕵️‍♀️`)
 }
 
 const message = sentences.join('\n')
