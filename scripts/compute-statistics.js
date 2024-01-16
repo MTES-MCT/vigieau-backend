@@ -8,6 +8,7 @@ import {getDepartements} from '../lib/cog.js'
 import mongo from '../lib/util/mongo.js'
 
 const matomoUrl = `${process.env.MATOMO_URL}/?module=API&token_auth=${process.env.MATOMO_API_KEY}&format=JSON&idSite=${process.env.MATOMO_ID_SITE}&period=day`
+const oldMatomoUrl = `${process.env.OLD_MATOMO_URL}/?module=API&token_auth=${process.env.OLD_MATOMO_API_KEY}&format=JSON&idSite=${process.env.OLD_MATOMO_ID_SITE}&period=day`
 
 async function computeStatistics() {
   const lastStat = await mongo.db.collection('statistics')
@@ -21,34 +22,67 @@ async function computeStatistics() {
     .find()
     .project({_created: 1})
     .toArray()
-  const visitsByDay = await got(`${matomoUrl}&method=VisitsSummary.getVisits&${matomoDate}`).json()
-  const restrictionsSearchsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=1&${matomoDate}`).json()
-  const arreteDownloadsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=2&${matomoDate}`).json()
-  const arreteCadreDownloadsByDay = await got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=3&${matomoDate}`).json()
-  const profileRepartitionByDay = await got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=1&${matomoDate}`).json()
-  const departementRepartitionByDay = await got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=2&${matomoDate}`).json()
+  const [
+    visitsByDay,
+    oldVisitsByDay,
+    restrictionsSearchsByDay,
+    oldRestrictionsSearchsByDay,
+    arreteDownloadsByDay,
+    oldArreteDownloadsByDay,
+    arreteCadreDownloadsByDay,
+    oldArreteCadreDownloadsByDay,
+    profileRepartitionByDay,
+    oldProfileRepartitionByDay,
+    departementRepartitionByDay,
+    oldDepartementRepartitionByDay
+  ]
+    = await Promise.all([
+      got(`${matomoUrl}&method=VisitsSummary.getVisits&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=VisitsSummary.getVisits&${matomoDate}`).json(),
+      got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=1&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=Events.getActionFromCategoryId&idSubtable=1&${matomoDate}`).json(),
+      got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=2&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=Events.getActionFromCategoryId&idSubtable=2&${matomoDate}`).json(),
+      got(`${matomoUrl}&method=Events.getActionFromCategoryId&idSubtable=3&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=Events.getActionFromCategoryId&idSubtable=3&${matomoDate}`).json(),
+      got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=1&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=Events.getNameFromActionId&idSubtable=1&${matomoDate}`).json(),
+      got(`${matomoUrl}&method=Events.getNameFromActionId&idSubtable=2&${matomoDate}`).json(),
+      got(`${oldMatomoUrl}&method=Events.getNameFromActionId&idSubtable=2&${matomoDate}`).json()
+    ])
 
   const statsToSave = []
   for (const d = lastStateDate; d < new Date(); d.setDate(d.getDate() + 1)) {
     const stat = {date: new Date(d)}
     const day = generateDateString(d)
 
-    stat.visits = visitsByDay[day] ?? 0
+    stat.visits = (visitsByDay[day] ?? 0) + (oldVisitsByDay[day] ?? 0)
 
     let restrictionsSearch = restrictionsSearchsByDay[day]
     restrictionsSearch = restrictionsSearch?.find(matomoEvent => matomoEvent.label === 'CODE INSEE')?.nb_events
-    stat.restrictionsSearch = restrictionsSearch ?? 0
+    let oldRestrictionsSearch = oldRestrictionsSearchsByDay[day]
+    oldRestrictionsSearch = oldRestrictionsSearch?.find(matomoEvent => matomoEvent.label === 'CODE INSEE')?.nb_events
+    stat.restrictionsSearch = (restrictionsSearch ?? 0) + (oldRestrictionsSearch ?? 0)
 
     let arreteDownloads = 0
-    if (arreteDownloadsByDay[day] && arreteDownloadsByDay[day][0].nb_events) {
+    if (arreteDownloadsByDay[day] && arreteDownloadsByDay[day][0]?.nb_events) {
       arreteDownloads += arreteDownloadsByDay[day][0].nb_events
     }
 
-    if (arreteCadreDownloadsByDay[day] && arreteCadreDownloadsByDay[day][0].nb_events) {
+    if (arreteCadreDownloadsByDay[day] && arreteCadreDownloadsByDay[day][0]?.nb_events) {
       arreteDownloads += arreteCadreDownloadsByDay[day][0].nb_events
     }
 
-    stat.arreteDownloads = arreteDownloads
+    let oldArreteDownloads = 0
+    if (oldArreteDownloadsByDay[day] && oldArreteDownloadsByDay[day][0]?.nb_events) {
+      oldArreteDownloads += oldArreteDownloadsByDay[day][0].nb_events
+    }
+
+    if (oldArreteCadreDownloadsByDay[day] && oldArreteCadreDownloadsByDay[day][0]?.nb_events) {
+      oldArreteDownloads += oldArreteCadreDownloadsByDay[day][0].nb_events
+    }
+
+    stat.arreteDownloads = arreteDownloads + oldArreteDownloads
 
     const profileRepartitionTmp = {
       particulier: 0,
@@ -60,7 +94,16 @@ async function computeStatistics() {
       for (const profile in profileRepartitionTmp) {
         if (Object.hasOwn(profileRepartitionTmp, profile)) {
           const event = profileRepartitionByDay[day].find(matomoEvent => matomoEvent.label === profile)
-          profileRepartitionTmp[profile] += event ? event.nb_events : 0
+          profileRepartitionTmp[profile] += event ? Number(event.nb_events) : 0
+        }
+      }
+    }
+
+    if (oldProfileRepartitionByDay[day]) {
+      for (const profile in profileRepartitionTmp) {
+        if (Object.hasOwn(profileRepartitionTmp, profile)) {
+          const event = oldProfileRepartitionByDay[day].find(matomoEvent => matomoEvent.label === profile)
+          profileRepartitionTmp[profile] += event ? Number(event.nb_events) : 0
         }
       }
     }
@@ -81,8 +124,17 @@ async function computeStatistics() {
     if (departementRepartitionByDay[day]) {
       for (const matomoEvent of departementRepartitionByDay[day]) {
         if (Object.prototype.hasOwnProperty.call(departementRepartitionTmp, matomoEvent.label)) {
-          departementRepartitionTmp[matomoEvent.label] += matomoEvent.nb_events
-          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.label).region.code] += matomoEvent.nb_events
+          departementRepartitionTmp[matomoEvent.label] += Number(matomoEvent.nb_events)
+          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.label).region.code] += Number(matomoEvent.nb_events)
+        }
+      }
+    }
+
+    if (oldDepartementRepartitionByDay[day]) {
+      for (const matomoEvent of oldDepartementRepartitionByDay[day]) {
+        if (Object.prototype.hasOwnProperty.call(departementRepartitionTmp, matomoEvent.label)) {
+          departementRepartitionTmp[matomoEvent.label] += Number(matomoEvent.nb_events)
+          regionRepartitionTmp[departements.find(d => d.code === matomoEvent.label).region.code] += Number(matomoEvent.nb_events)
         }
       }
     }
