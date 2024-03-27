@@ -34,7 +34,6 @@ jobs:
           S3_ACCESS_KEY: ${{ secrets.S3_ACCESS_KEY }}
           S3_SECRET_KEY: ${{ secrets.S3_SECRET_KEY }}
           S3_VHOST: ${{ secrets.S3_VHOST }}
-      - uses: gautamkrishnar/keepalive-workflow@v1
 
   deploy:
     runs-on: ubuntu-latest
