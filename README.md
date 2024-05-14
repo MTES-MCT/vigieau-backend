@@ -1,3 +1,7 @@
+# 📢 Deprecated
+
+Se référer à la [nouvelle API](https://github.com/MTES-MCT/vigieau-api) qui se base sur les données de VigiEau Admin 
+
 # API Sécheresse
 
 API permettent de retourner les restrictions en vigueur en lien avec la politique de préservation de la ressource en eau.
